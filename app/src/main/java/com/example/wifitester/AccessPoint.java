@@ -7,7 +7,7 @@ import java.util.Map.*;
 
 class AccessPoint
 {
-    static String AP_Extension = "_TrilaterationAP";
+    static String AP_Extension = "TrilaterationAP";
     String SSID;
     int Location[];
 
@@ -17,8 +17,8 @@ class AccessPoint
         Location = Location_In;
     }
     static private HashMap<String, AccessPoint> AP_DataBase = new HashMap<String, AccessPoint>() {{
-        put("BIO251_A"+AP_Extension, new AccessPoint("BIO251_A"+AP_Extension, new int[]{0, 10, 0}));
-        put("BIO251_B"+AP_Extension, new AccessPoint("BIO251_A"+AP_Extension, new int[]{0, 10, 0}));
+        put("BIO251_A_"+AP_Extension, new AccessPoint("BIO251_A_"+AP_Extension, new int[]{0, 10, 0}));
+        put("BIO251_B_"+AP_Extension, new AccessPoint("BIO251_B_"+AP_Extension, new int[]{0, 10, 0}));
     }};
 
     static public AccessPoint GetAccessPoint(String SSID_In)
