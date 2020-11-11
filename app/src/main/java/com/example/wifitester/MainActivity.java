@@ -87,10 +87,17 @@ public class MainActivity extends AppCompatActivity {
                 if(temp_AP!=null)
                 {
                     Visable_APs.add(temp_AP);
-                    arrayList.add(scanResult.SSID + ": dB[" + scanResult.level+"]");
+                    double dist = calculateDistanceMeters(scanResult.level,2412);
+                    arrayList.add(scanResult.SSID + ": dB[" + scanResult.level+"], Dist["+dist+"m]");
                     adapter.notifyDataSetChanged();
                 }
             }
         }
     };
+
+    //https://stackoverflow.com/questions/11217674/how-to-calculate-distance-from-wifi-router-using-signal-strength
+    public double calculateDistanceMeters(double signalLevelInDb, double freqInMHz) {
+        double exp = (27.55 - (20 * Math.log10(freqInMHz)) + Math.abs(signalLevelInDb)) / 20.0;
+        return Math.pow(10.0, exp);
+    }
 }
