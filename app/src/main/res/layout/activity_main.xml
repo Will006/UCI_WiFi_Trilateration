@@ -30,7 +30,7 @@
                     android:text="@string/scan_wifi" />
 
                 <Button
-                    android:id="@+id/button2"
+                    android:id="@+id/RecordButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"

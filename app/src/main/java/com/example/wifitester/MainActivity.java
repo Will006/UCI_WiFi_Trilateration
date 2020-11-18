@@ -17,21 +17,29 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 
 public class MainActivity extends AppCompatActivity {
     //AccessPoint test =  new AccessPoint("BIO251_A"+AccessPoint.AP_Extension, new int[]{0, 10, 0});
     private WifiManager wifiManager;
-    private final ArrayList<String> arrayList = new ArrayList<>();
+    private final ArrayList<ScanResult> arrayList = new ArrayList<>();
     private ArrayAdapter<String> adapter;
+    private final DataWriter dataWriter = new DataWriter(this);
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button buttonScan = findViewById(R.id.ScanButton);
+        Button buttonRecord = findViewById(R.id.RecordButton);
         buttonScan.setOnClickListener(view -> scanWifi());
+        buttonRecord.setOnClickListener(view -> {
+            dataWriter.getFile();
+            ScanResult result = arrayList.get(0);
+            dataWriter.writeData(10, result.level, calculateDistanceMeters(result.level, result.frequency));
+            dataWriter.saveData();
+        });
 
         ListView listView = findViewById(R.id.wifiList);
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -41,10 +49,16 @@ public class MainActivity extends AppCompatActivity {
             wifiManager.setWifiEnabled(true);
         }
 
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, arrayList);
+        adapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_list_item_1,
+                (arrayList.stream()
+                        .map(scanResult ->
+                                scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]")
+                        .collect(Collectors.toList())));
         listView.setAdapter(adapter);
         scanWifi();
     }
+
     //https://developer.android.com/reference/android/net/wifi/WifiManager
     //https://developer.android.com/reference/android/net/ConnectivityManager
     /*
@@ -60,24 +74,20 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "Scanning WiFi ...", Toast.LENGTH_SHORT).show();
     }
 
-    final BroadcastReceiver wifiReceiver = new BroadcastReceiver()
-    {
+    final BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
 
         final List<AccessPoint> Visible_APs = new LinkedList<>();
         AccessPoint temp_AP;
+
         @Override
-        public void onReceive(Context context, Intent intent)
-        {
+        public void onReceive(Context context, Intent intent) {
             List<ScanResult> results = wifiManager.getScanResults();
             unregisterReceiver(this);
-            for (ScanResult scanResult : results)
-            {
+            for (ScanResult scanResult : results) {
                 temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
-                if(temp_AP!=null)
-                {
+                if (temp_AP != null) {
                     Visible_APs.add(temp_AP);
-                    double dist = calculateDistanceMeters(scanResult.level,scanResult.frequency);
-                    arrayList.add(scanResult.SSID + ": dB[" + scanResult.level+"], Dist["+dist+"m]");
+                    arrayList.add(scanResult);
                     adapter.notifyDataSetChanged();
                 }
             }
