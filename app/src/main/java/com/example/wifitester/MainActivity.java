@@ -23,22 +23,18 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     //AccessPoint test =  new AccessPoint("BIO251_A"+AccessPoint.AP_Extension, new int[]{0, 10, 0});
     private WifiManager wifiManager;
-    private ListView listView;
-    private Button buttonScan;
-    private int size = 0;
-    private List<ScanResult> results;
-    private ArrayList<String> arrayList = new ArrayList<>();
-    private ArrayAdapter adapter;
+    private final ArrayList<String> arrayList = new ArrayList<>();
+    private ArrayAdapter<String> adapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        buttonScan = findViewById(R.id.ScanButton);
+        Button buttonScan = findViewById(R.id.ScanButton);
         buttonScan.setOnClickListener(view -> scanWifi());
 
-        listView = findViewById(R.id.wifiList);
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        ListView listView = findViewById(R.id.wifiList);
+        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
         if (!wifiManager.isWifiEnabled()) {
             Toast.makeText(this, "WiFi is disabled ... We need to enable it", Toast.LENGTH_LONG).show();
@@ -64,22 +60,22 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "Scanning WiFi ...", Toast.LENGTH_SHORT).show();
     }
 
-    BroadcastReceiver wifiReceiver = new BroadcastReceiver()
+    final BroadcastReceiver wifiReceiver = new BroadcastReceiver()
     {
 
-        List<AccessPoint> Visable_APs = new LinkedList<>();
+        final List<AccessPoint> Visible_APs = new LinkedList<>();
         AccessPoint temp_AP;
         @Override
         public void onReceive(Context context, Intent intent)
         {
-            results = wifiManager.getScanResults();
+            List<ScanResult> results = wifiManager.getScanResults();
             unregisterReceiver(this);
             for (ScanResult scanResult : results)
             {
                 temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
                 if(temp_AP!=null)
                 {
-                    Visable_APs.add(temp_AP);
+                    Visible_APs.add(temp_AP);
                     double dist = calculateDistanceMeters(scanResult.level,scanResult.frequency);
                     arrayList.add(scanResult.SSID + ": dB[" + scanResult.level+"], Dist["+dist+"m]");
                     adapter.notifyDataSetChanged();
