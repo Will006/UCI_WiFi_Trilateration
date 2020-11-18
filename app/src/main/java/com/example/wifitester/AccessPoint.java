@@ -2,8 +2,6 @@ package com.example.wifitester;
 
 
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.*;
 
 class AccessPoint
 {
@@ -19,6 +17,7 @@ class AccessPoint
     static private HashMap<String, AccessPoint> AP_DataBase = new HashMap<String, AccessPoint>() {{
         put("BIO251_A_"+AP_Extension, new AccessPoint("BIO251_A_"+AP_Extension, new int[]{0, 10, 0}));
         put("BIO251_B_"+AP_Extension, new AccessPoint("BIO251_B_"+AP_Extension, new int[]{0, 10, 0}));
+        put("RPiHotspot", new AccessPoint("RPiHotspot", new int[]{0, 10, 0}));
     }};
 
     static public AccessPoint GetAccessPoint(String SSID_In)
