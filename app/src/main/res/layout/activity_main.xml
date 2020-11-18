@@ -2,42 +2,60 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:padding="10dp">
 
 
-        <ListView
-            android:id="@+id/wifiList"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_weight="0.97" />
+    <ListView
+        android:id="@+id/wifiList"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="0.97" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="49dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="49dp"
+        android:orientation="horizontal"
+        android:weightSum="2">
 
-                <Button
-                    android:id="@+id/ScanButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginHorizontal="10dp"
-                    android:text="@string/scan_wifi" />
+        <Button
+            android:id="@+id/ScanButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="10dp"
+            android:layout_weight="1"
+            android:text="@string/scan_wifi" />
 
-                <Button
-                    android:id="@+id/RecordButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginHorizontal="10dp"
-                    android:text="@string/button" />
+            <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="#FFFFFF"
+                android:orientation="vertical"
+                tools:visibility="visible">
 
-        </LinearLayout>
+                    <Button
+                        android:id="@+id/RecordButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:text="@string/button"
+                        android:visibility="visible" />
+
+                    <Button
+                        android:id="@+id/StopButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginHorizontal="10dp"
+                        android:text="@string/stop"
+                        android:visibility="gone" />
+            </RelativeLayout>
+
+    </LinearLayout>
 
 
 </LinearLayout>
