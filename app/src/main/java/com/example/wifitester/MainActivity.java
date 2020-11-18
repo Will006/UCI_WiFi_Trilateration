@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 if(temp_AP!=null)
                 {
                     Visable_APs.add(temp_AP);
-                    double dist = calculateDistanceMeters(scanResult.level,2412);
+                    double dist = calculateDistanceMeters(scanResult.level,5210);
                     arrayList.add(scanResult.SSID + ": dB[" + scanResult.level+"], Dist["+dist+"m]");
                     adapter.notifyDataSetChanged();
                 }
