@@ -15,15 +15,20 @@ public class DataWriter extends AppCompatActivity {
     private FileOutputStream outfileStream;
     private PrintStream outStream;
     boolean hasFile;
-    private Context ctx;
-    DataWriter(Context ctx) {
+    private final Context ctx;
+    private final String AP;
+    DataWriter(Context ctx, String ap) {
         this.ctx = ctx;
+        this.AP = ap;
     }
 
+    /**
+     * Prepares/allocates the file
+     */
     void getFile() {
         String today = (new Date()).toString();
         try {
-            File file = new File(ctx.getExternalFilesDir(null), today + "_ATLAS_data.csv");
+            File file = new File(ctx.getExternalFilesDir(null), today + "_ATLAS_data_" + AP + ".csv");
             outfileStream = new FileOutputStream(file);
             // make it easier to work with by wrapping it in a print stream
             outStream = new PrintStream(outfileStream);
@@ -47,6 +52,9 @@ public class DataWriter extends AppCompatActivity {
         outStream.println(realDistance + "," + signalStrength + "," + calculatedDistance);
     }
 
+    /**
+     * Closes and commits the file contents
+     */
     void saveData() {
         try {
             outStream.flush();

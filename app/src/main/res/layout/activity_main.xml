@@ -23,15 +23,31 @@
         android:orientation="horizontal"
         android:weightSum="2">
 
-        <Button
-            android:id="@+id/ScanButton"
+        <RelativeLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="10dp"
             android:layout_weight="1"
-            android:text="@string/scan_wifi" />
+            android:background="#FFFFFF"
+            android:orientation="vertical"
+            tools:visibility="visible">
 
-            <RelativeLayout
+            <Button
+                android:id="@+id/ScanButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="10dp"
+                android:text="@string/scan_wifi" />
+
+            <Button
+                android:id="@+id/Record_WiFi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/record_wifi"
+                android:layout_marginHorizontal="10dp"
+                android:visibility="gone" />
+        </RelativeLayout>
+
+        <RelativeLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

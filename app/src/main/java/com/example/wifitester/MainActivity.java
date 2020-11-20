@@ -21,10 +21,15 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -34,15 +39,32 @@ public class MainActivity extends AppCompatActivity {
     private final ArrayList<String> arrayList = new ArrayList<>();
     private final ArrayList<ScanResult> scanList = new ArrayList<>();
     private ArrayAdapter<String> adapter;
-    private final DataWriter dataWriter = new DataWriter(this);
-    private Double distance = (double) 0;
+    private final Map<String, DataWriter> apLogMap = new HashMap<>();
+    private Double realDistance = (double) 0;
+    ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+    int times = 5;
+    MainActivity outside = this;
     private final DataSetObserver observer = new DataSetObserver() {
         @Override
         public void onChanged() {
             super.onChanged();
-            ScanResult result = scanList.get(0);
-            recordDataDialog();
-            dataWriter.writeData(distance, result.level, calculateDistanceMeters(result.level, result.frequency));
+            for (ScanResult result: scanList) {
+                if (!apLogMap.containsKey(result.SSID)) {
+                    DataWriter d = new DataWriter(outside, result.SSID);
+                    apLogMap.put(result.SSID, d);
+                    d.getFile();
+                }
+                DataWriter dataWriter = apLogMap.get(result.SSID);
+                dataWriter.writeData(realDistance, result.level, calculateDistanceMeters(result.level, result.frequency));
+            }
+            if (times > 0) {
+                Toast.makeText(outside, times + " more record(s)", Toast.LENGTH_LONG).show();
+                --times;
+                executor.schedule(outside::scanWifi, 10, TimeUnit.SECONDS);
+            } else {
+                Toast.makeText(outside, "Recording finished!", Toast.LENGTH_LONG).show();
+                findViewById(R.id.Record_WiFi).setEnabled(true);
+            }
         }
     };
 
@@ -51,21 +73,34 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button buttonScan = findViewById(R.id.ScanButton);
+        Button buttonRecWiFi = findViewById(R.id.Record_WiFi);
         Button buttonRecord = findViewById(R.id.RecordButton);
         Button buttonStop = findViewById(R.id.StopButton);
+        // utility function to change the buttons
+        Runnable changeMode = () -> {
+            for (Button button : Arrays.asList(buttonScan, buttonRecWiFi, buttonRecord, buttonStop))
+                button.setVisibility((int) (button.getVisibility() ^ View.GONE));
+        };
         buttonScan.setOnClickListener(view -> scanWifi());
+        buttonRecWiFi.setOnClickListener(view -> {
+            buttonRecWiFi.setEnabled(false);
+            times = 5;
+            recordDataDialog();
+        });
         buttonRecord.setOnClickListener(view -> {
-            dataWriter.getFile();
             adapter.registerDataSetObserver(observer);
-            buttonRecord.setVisibility(View.GONE);
-            buttonStop.setVisibility(View.VISIBLE);
+            apLogMap.clear();
+            changeMode.run();
         });
         buttonStop.setOnClickListener(view -> {
             adapter.unregisterDataSetObserver(observer);
-            dataWriter.saveData();
-            buttonRecord.setVisibility(View.VISIBLE);
-            buttonStop.setVisibility(View.GONE);
+            for (DataWriter d: apLogMap.values()) {
+                d.saveData();
+            }
+            apLogMap.clear();
+            changeMode.run();
         });
+        buttonStop.setVisibility(View.GONE);
         buttonStop.setVisibility(View.GONE);
 
 
@@ -109,6 +144,9 @@ public class MainActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             List<ScanResult> results = wifiManager.getScanResults();
             unregisterReceiver(this);
+            if (results.size() == 0) {
+                Toast.makeText(outside, "No AP's, check location services?", Toast.LENGTH_SHORT).show();
+            }
             for (ScanResult scanResult : results) {
                 temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
                 if (temp_AP != null) {
@@ -140,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
 // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
         input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         input.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        input.setText(String.format(Locale.ENGLISH,"%d", distance.longValue()));
+        input.setText(new DecimalFormat("0.#").format(realDistance));
 //        input.setOnEditorActionListener((v, actionId, event) -> {
 //            if (event != null) {
 //                distance = Double.parseDouble(input.getText().toString());
@@ -151,7 +189,10 @@ public class MainActivity extends AppCompatActivity {
         builder.setView(input);
 
 // Set up the buttons
-        builder.setPositiveButton("OK", (dialog, which) -> distance = Double.parseDouble(input.getText().toString()));
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            realDistance = Double.parseDouble(input.getText().toString());
+            scanWifi();
+        });
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
 
         AlertDialog dialog = builder.create();
