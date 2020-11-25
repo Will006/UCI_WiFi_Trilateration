@@ -24,30 +24,27 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class MainActivity extends AppCompatActivity {
     //AccessPoint test =  new AccessPoint("BIO251_A"+AccessPoint.AP_Extension, new int[]{0, 10, 0});
     private WifiManager wifiManager;
     // holds nice formatted values for list
     private final ArrayList<String> arrayList = new ArrayList<>();
-    // holds raw scan values from Android OS
-//    private final ArrayList<ScanResult> scanList = new ArrayList<>();
+    // adapter to hold list state for view
     private ArrayAdapter<String> adapter;
+    // a hash map to hold currently available AP's (subset of AP_DataBase)
     private final Map<String, DataWriter> apLogMap = new HashMap<>();
+    // var to hold the logged distance over recording
     private Double realDistance = (double) 0;
 
-    // executor to schedule and run the wifi scan
-    ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
     // number of data points to get
     final int totalTimes = 200;
     // number of points left
     int times = totalTimes;
     // var to hold scope for the data set callback
-    MainActivity outside = this;
+    final MainActivity outside = this;
     // state var
     boolean recordMode = false;
 
@@ -59,12 +56,14 @@ public class MainActivity extends AppCompatActivity {
         Button buttonRecWiFi = findViewById(R.id.Record_WiFi);
         Button buttonRecord = findViewById(R.id.RecordButton);
         Button buttonStop = findViewById(R.id.StopButton);
-        // utility function to change the buttons
+        // utility function to change modes
         Runnable changeMode = () -> {
             recordMode = !recordMode;
             for (Button button : Arrays.asList(buttonScan, buttonRecWiFi, buttonRecord, buttonStop))
                 button.setVisibility((int) (button.getVisibility() ^ View.GONE));
         };
+
+        // These are the button callback functions
         buttonScan.setOnClickListener(view -> scanWifi());
         buttonRecWiFi.setOnClickListener(view -> {
             buttonRecWiFi.setEnabled(false);
@@ -72,23 +71,24 @@ public class MainActivity extends AppCompatActivity {
             recordDataDialog();
         });
         buttonRecord.setOnClickListener(view -> {
-//            adapter.registerDataSetObserver(observer);
             apLogMap.clear();
             changeMode.run();
         });
         buttonStop.setOnClickListener(view -> {
-//            adapter.unregisterDataSetObserver(observer);
-            for (DataWriter d: apLogMap.values()) {
+            for (DataWriter d : apLogMap.values()) {
                 d.saveData();
             }
             apLogMap.clear();
             changeMode.run();
         });
+
+        // double ensure these buttons aren't shown
         buttonStop.setVisibility(View.GONE);
         buttonStop.setVisibility(View.GONE);
 
-
+        // init view
         ListView listView = findViewById(R.id.wifiList);
+        // get the wifi service
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
         if (!wifiManager.isWifiEnabled()) {
@@ -96,10 +96,12 @@ public class MainActivity extends AppCompatActivity {
             wifiManager.setWifiEnabled(true);
         }
 
+        // setup view with list update notifications via adapter
         adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1,
                 arrayList);
         listView.setAdapter(adapter);
+        // do first scan
         scanWifi();
     }
 
@@ -111,71 +113,81 @@ public class MainActivity extends AppCompatActivity {
     https://developer.android.com/reference/android/net/wifi/WifiManager#RSSI_CHANGED_ACTION
 
      */
+
+    /**
+     * calls OS to scan wifi for us
+     * we remove any wifi's in list and notify the user we are scanning (if not recording)
+     */
     private void scanWifi() {
         arrayList.clear();
-//        scanList.clear();
         registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         wifiManager.startScan();
         if (!recordMode)
             Toast.makeText(this, "Scanning WiFi ...", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * unnamed broadcast receiver to attach our callbacks once scan is done
+     */
     final BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
 
-        final List<AccessPoint> Visible_APs = new LinkedList<>();
-        AccessPoint temp_AP;
-
+        /**
+         * callback once we get the scan results
+         * this handles the recording and showing the received data
+         */
         @Override
         public void onReceive(Context context, Intent intent) {
             List<ScanResult> results = wifiManager.getScanResults();
+            // make sure we release hold
             unregisterReceiver(this);
+            // if we got nothing
             if (results.size() == 0) {
                 if (!recordMode)
                     Toast.makeText(outside, "No AP's, check location services?", Toast.LENGTH_SHORT).show();
                 else
                     outside.scanWifi();
-                // early return, dont clear list, and dont count as sample
+                // early return, don't clear list in scan mode, and don't count as a sample in record mode
                 return;
             }
+            // for each result
             for (ScanResult scanResult : results) {
-                temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
+                AccessPoint temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
+                // if AP in our DB of known AP's
                 if (temp_AP != null) {
-                    Visible_APs.add(temp_AP);
-
+                    // if in record mode
                     if (outside.recordMode) {
+                        // if this is first sight, create a new file for AP and store reference for later
                         if (!apLogMap.containsKey(scanResult.SSID)) {
                             DataWriter d = new DataWriter(outside, scanResult.SSID);
                             apLogMap.put(scanResult.SSID, d);
                             d.getFile();
                         }
+                        // get writer for this AP and write the data
                         DataWriter dataWriter = apLogMap.get(scanResult.SSID);
                         dataWriter.writeData(realDistance, scanResult.level, calculateDistanceMeters(scanResult.level, scanResult.frequency));
-                    }
-
-                    else {
+                    } else {
+                        // add to view list
                         arrayList.add(scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]");
                     }
                 }
             }
+            // if record mode, check number of times
             if (outside.recordMode) {
                 if (times > 0) {
-                    if (times % 20 ==0)
+                    // reassure the user that we are working
+                    if (times % 20 == 0)
                         Toast.makeText(outside, times + " more record(s)", Toast.LENGTH_LONG).show();
+                    // don't forget to count
                     --times;
-                    //                executor.schedule(outside::scanWifi, 10, TimeUnit.SECONDS);
+                    // immediately call a scan again (we know this will take awhile so no worries of a race condition)
                     outside.scanWifi();
                 } else {
+                    // we are done, enable the record button
                     Toast.makeText(outside, "Recording finished!", Toast.LENGTH_LONG).show();
                     findViewById(R.id.Record_WiFi).setEnabled(true);
                 }
-            }
-
-//            arrayList.addAll(results.stream()
-//                    .filter(result -> AccessPoint.GetAccessPoint(result.SSID) != null)
-//                    .map(scanResult ->
-//                            scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]")
-//                    .collect(Collectors.toCollection(ArrayList::new)));
-            else {
+            } else {
+                // we are not recording, refresh list
                 adapter.notifyDataSetChanged();
             }
         }
@@ -198,13 +210,6 @@ public class MainActivity extends AppCompatActivity {
         input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         input.setImeOptions(EditorInfo.IME_ACTION_DONE);
         input.setText(new DecimalFormat("0.#").format(realDistance));
-//        input.setOnEditorActionListener((v, actionId, event) -> {
-//            if (event != null) {
-//                distance = Double.parseDouble(input.getText().toString());
-//                return true;
-//            }
-//            return false;
-//        });
         builder.setView(input);
 
 // Set up the buttons
