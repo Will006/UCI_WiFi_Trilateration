@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.database.DataSetObserver;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -29,44 +28,28 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-
 
 public class MainActivity extends AppCompatActivity {
     //AccessPoint test =  new AccessPoint("BIO251_A"+AccessPoint.AP_Extension, new int[]{0, 10, 0});
     private WifiManager wifiManager;
+    // holds nice formatted values for list
     private final ArrayList<String> arrayList = new ArrayList<>();
-    private final ArrayList<ScanResult> scanList = new ArrayList<>();
+    // holds raw scan values from Android OS
+//    private final ArrayList<ScanResult> scanList = new ArrayList<>();
     private ArrayAdapter<String> adapter;
     private final Map<String, DataWriter> apLogMap = new HashMap<>();
     private Double realDistance = (double) 0;
+
+    // executor to schedule and run the wifi scan
     ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
-    int times = 5;
+    // number of data points to get
+    final int totalTimes = 200;
+    // number of points left
+    int times = totalTimes;
+    // var to hold scope for the data set callback
     MainActivity outside = this;
-    private final DataSetObserver observer = new DataSetObserver() {
-        @Override
-        public void onChanged() {
-            super.onChanged();
-            for (ScanResult result: scanList) {
-                if (!apLogMap.containsKey(result.SSID)) {
-                    DataWriter d = new DataWriter(outside, result.SSID);
-                    apLogMap.put(result.SSID, d);
-                    d.getFile();
-                }
-                DataWriter dataWriter = apLogMap.get(result.SSID);
-                dataWriter.writeData(realDistance, result.level, calculateDistanceMeters(result.level, result.frequency));
-            }
-            if (times > 0) {
-                Toast.makeText(outside, times + " more record(s)", Toast.LENGTH_LONG).show();
-                --times;
-                executor.schedule(outside::scanWifi, 10, TimeUnit.SECONDS);
-            } else {
-                Toast.makeText(outside, "Recording finished!", Toast.LENGTH_LONG).show();
-                findViewById(R.id.Record_WiFi).setEnabled(true);
-            }
-        }
-    };
+    // state var
+    boolean recordMode = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -78,22 +61,23 @@ public class MainActivity extends AppCompatActivity {
         Button buttonStop = findViewById(R.id.StopButton);
         // utility function to change the buttons
         Runnable changeMode = () -> {
+            recordMode = !recordMode;
             for (Button button : Arrays.asList(buttonScan, buttonRecWiFi, buttonRecord, buttonStop))
                 button.setVisibility((int) (button.getVisibility() ^ View.GONE));
         };
         buttonScan.setOnClickListener(view -> scanWifi());
         buttonRecWiFi.setOnClickListener(view -> {
             buttonRecWiFi.setEnabled(false);
-            times = 5;
+            times = totalTimes;
             recordDataDialog();
         });
         buttonRecord.setOnClickListener(view -> {
-            adapter.registerDataSetObserver(observer);
+//            adapter.registerDataSetObserver(observer);
             apLogMap.clear();
             changeMode.run();
         });
         buttonStop.setOnClickListener(view -> {
-            adapter.unregisterDataSetObserver(observer);
+//            adapter.unregisterDataSetObserver(observer);
             for (DataWriter d: apLogMap.values()) {
                 d.saveData();
             }
@@ -129,10 +113,11 @@ public class MainActivity extends AppCompatActivity {
      */
     private void scanWifi() {
         arrayList.clear();
-        scanList.clear();
+//        scanList.clear();
         registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         wifiManager.startScan();
-        Toast.makeText(this, "Scanning WiFi ...", Toast.LENGTH_SHORT).show();
+        if (!recordMode)
+            Toast.makeText(this, "Scanning WiFi ...", Toast.LENGTH_SHORT).show();
     }
 
     final BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
@@ -145,20 +130,54 @@ public class MainActivity extends AppCompatActivity {
             List<ScanResult> results = wifiManager.getScanResults();
             unregisterReceiver(this);
             if (results.size() == 0) {
-                Toast.makeText(outside, "No AP's, check location services?", Toast.LENGTH_SHORT).show();
+                if (!recordMode)
+                    Toast.makeText(outside, "No AP's, check location services?", Toast.LENGTH_SHORT).show();
+                else
+                    outside.scanWifi();
+                // early return, dont clear list, and dont count as sample
+                return;
             }
             for (ScanResult scanResult : results) {
                 temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
                 if (temp_AP != null) {
                     Visible_APs.add(temp_AP);
-                    scanList.add(scanResult);
+
+                    if (outside.recordMode) {
+                        if (!apLogMap.containsKey(scanResult.SSID)) {
+                            DataWriter d = new DataWriter(outside, scanResult.SSID);
+                            apLogMap.put(scanResult.SSID, d);
+                            d.getFile();
+                        }
+                        DataWriter dataWriter = apLogMap.get(scanResult.SSID);
+                        dataWriter.writeData(realDistance, scanResult.level, calculateDistanceMeters(scanResult.level, scanResult.frequency));
+                    }
+
+                    else {
+                        arrayList.add(scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]");
+                    }
                 }
             }
-            arrayList.addAll(scanList.stream()
-                    .map(scanResult ->
-                            scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]")
-                    .collect(Collectors.toCollection(ArrayList::new)));
-            adapter.notifyDataSetChanged();
+            if (outside.recordMode) {
+                if (times > 0) {
+                    if (times % 20 ==0)
+                        Toast.makeText(outside, times + " more record(s)", Toast.LENGTH_LONG).show();
+                    --times;
+                    //                executor.schedule(outside::scanWifi, 10, TimeUnit.SECONDS);
+                    outside.scanWifi();
+                } else {
+                    Toast.makeText(outside, "Recording finished!", Toast.LENGTH_LONG).show();
+                    findViewById(R.id.Record_WiFi).setEnabled(true);
+                }
+            }
+
+//            arrayList.addAll(results.stream()
+//                    .filter(result -> AccessPoint.GetAccessPoint(result.SSID) != null)
+//                    .map(scanResult ->
+//                            scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]")
+//                    .collect(Collectors.toCollection(ArrayList::new)));
+            else {
+                adapter.notifyDataSetChanged();
+            }
         }
     };
 
