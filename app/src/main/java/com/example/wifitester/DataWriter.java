@@ -33,7 +33,7 @@ public class DataWriter extends AppCompatActivity {
             // make it easier to work with by wrapping it in a print stream
             outStream = new PrintStream(outfileStream);
             // init the top row
-            String header = "Real Distance, Signal Strength, Calculated Distance";
+            String header = "Logged Distance, Signal Strength, Calculated Distance (m)";
             outStream.println(header);
             hasFile = true;
         } catch (FileNotFoundException e) {
