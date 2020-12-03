@@ -6,12 +6,12 @@ import android.net.wifi.ScanResult;
 import java.util.Arrays;
 
 public class Locator {
-    private Integer[][] voting;
+    private int[][] voting;
     private final String ap1;
     private final String ap2;
 
     Locator(int size, String ap1, String ap2) {
-        voting = new Integer[size][size];
+        voting = new int[size][size];
         this.ap1 = ap1;
         this.ap2 = ap2;
     }
@@ -60,7 +60,7 @@ public class Locator {
     }
 
     void clear() {
-        voting = new Integer[voting.length][voting.length];
+        voting = new int[voting.length][voting.length];
     }
 
     int getMaxSegment() {
