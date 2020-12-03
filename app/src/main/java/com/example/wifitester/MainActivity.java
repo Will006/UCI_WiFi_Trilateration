@@ -4,11 +4,12 @@ import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.text.InputType;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
@@ -47,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
     final MainActivity outside = this;
     // state var
     boolean recordMode = false;
+    // WiFi helper
+    WiFiScanner wiFiScanner;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -88,13 +91,10 @@ public class MainActivity extends AppCompatActivity {
 
         // init view
         ListView listView = findViewById(R.id.wifiList);
-        // get the wifi service
-        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
-        if (!wifiManager.isWifiEnabled()) {
-            Toast.makeText(this, "WiFi is disabled ... We need to enable it", Toast.LENGTH_LONG).show();
-            wifiManager.setWifiEnabled(true);
-        }
+        // setup helper
+        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        wiFiScanner = new WiFiScanner(wifiReceiver, this);
 
         // setup view with list update notifications via adapter
         adapter = new ArrayAdapter<>(this,
@@ -105,36 +105,24 @@ public class MainActivity extends AppCompatActivity {
         scanWifi();
     }
 
-    //https://developer.android.com/reference/android/net/wifi/WifiManager
-    //https://developer.android.com/reference/android/net/ConnectivityManager
-    /*
-    https://stackoverflow.com/questions/16485370/wifi-position-triangulation
-    https://developer.android.com/reference/android/net/wifi/WifiManager#EXTRA_NEW_RSSI
-    https://developer.android.com/reference/android/net/wifi/WifiManager#RSSI_CHANGED_ACTION
-
-     */
-
     /**
      * calls OS to scan wifi for us
      * we remove any wifi's in list and notify the user we are scanning (if not recording)
      */
     private void scanWifi() {
         arrayList.clear();
-        registerReceiver(wifiReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-        wifiManager.startScan();
+        wiFiScanner.scanWifi();
         if (!recordMode)
             Toast.makeText(this, "Scanning WiFi ...", Toast.LENGTH_SHORT).show();
     }
 
     /**
      * unnamed broadcast receiver to attach our callbacks once scan is done
+     * <p>
+     * callback once we get the scan results
+     * this handles the recording and showing the received data
      */
     final BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
-
-        /**
-         * callback once we get the scan results
-         * this handles the recording and showing the received data
-         */
         @Override
         public void onReceive(Context context, Intent intent) {
             List<ScanResult> results = wifiManager.getScanResults();
@@ -222,5 +210,29 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         dialog.show();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.locate_menu) {
+            Intent intent = new Intent(this, Locating.class);
+            startActivity(intent);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

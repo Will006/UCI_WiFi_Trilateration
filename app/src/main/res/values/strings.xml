@@ -4,4 +4,5 @@
     <string name="button">Record</string>
     <string name="stop">Stop</string>
     <string name="record_wifi">Record WiFi</string>
+    <string name="title_activity_locating">Locating</string>
 </resources>
