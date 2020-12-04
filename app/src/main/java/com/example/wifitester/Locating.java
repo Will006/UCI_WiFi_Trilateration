@@ -10,9 +10,10 @@ import android.graphics.Paint;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.text.Layout;
+import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -21,6 +22,7 @@ import androidx.core.content.ContextCompat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -49,18 +51,19 @@ public class Locating extends AppCompatActivity {
         @Override
         public void onDraw(Canvas c) {
             super.onDraw(c);
-            c.drawLine(xoffset, ymid, xoffset+barlen, ymid, paint);
+            c.drawLine(xoffset, ymid, xoffset + barlen, ymid, paint);
             for (int i = 0; i <= space / segments; i++) {
-                c.drawLine(i * barlen*segments/space + xoffset, ymid - 100, i * barlen*segments/space + xoffset, ymid + 100, paint);
+                c.drawLine(i * barlen * segments / space + xoffset, ymid - 100, i * barlen * segments / space + xoffset, ymid + 100, paint);
             }
         }
     }
+
     class DotView extends View {
         Paint paint = new Paint();
         Context ctx;
 
         DotView(Context ctx, AttributeSet attrs) {
-            super(ctx,attrs);
+            super(ctx, attrs);
             this.ctx = ctx;
             paint.setColor(Color.BLACK);
         }
@@ -83,9 +86,9 @@ public class Locating extends AppCompatActivity {
         ConstraintLayout l = (ConstraintLayout) findViewById(R.id.loc_parent);
         l.addView(dv);
 
-//        dot = findViewById(R.id.dot);
-        dot = new DotView(this, null);
-        l.addView(dot);
+        dot = findViewById(R.id.dotView);
+//        dot = new DotView(this, null);
+//        l.addView(dot);
         locator = new Locator(50, "RPiHotspot", "RPiHotspot2");
         String[] AP = new String[]{"RPiHotspot", "RPiHotspot2"};
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -100,24 +103,44 @@ public class Locating extends AppCompatActivity {
                     // early return
                     return;
                 }
-                for (ScanResult r: results) {
-                    if (Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID))){
+                for (ScanResult r : results) {
+                    if (Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID))) {
                         locator.vote(r);
                     }
                 }
-                redrawDot(locator.getMaxSegment());
-                e.schedule(wiFiScanner::scanWifi, 1, TimeUnit.SECONDS);
+//                redrawDot(locator.getMaxSegment());
+
             }
         };
         wiFiScanner = new WiFiScanner(bp, this);
-        wiFiScanner.scanWifi();
-    }
+        h.postDelayed(dotRedraw, 1000);
+        e.scheduleAtFixedRate(dotRedraw, 5, 1, TimeUnit.SECONDS);
+//        wiFiScanner.scanWifi();
 
-    void redrawDot(int seg) {
-        ObjectAnimator ani = ObjectAnimator.ofInt(dot,
+    }
+    Handler h = new Handler();
+    Runnable dotRedraw = new Runnable() {
+        @Override
+        public void run() {
+            int r = new Random().nextInt(3000);
+            Toast.makeText(getApplicationContext(), "Moving dot to " + r, Toast.LENGTH_SHORT).show();
+            dot = findViewById(R.id.dotView);
+            dot.setTranslationX(r);
+//            ObjectAnimator ani = ObjectAnimator.ofFloat(dot,
+//                    "X",
+//                    0, r);//seg * barlen*segments/space + xoffset + barlen/2*segments/space);
+//        ani.setDuration(1000);
+//            ani.start();
+            h.postDelayed(this, 1000);
+        }
+    };
+
+    void redrawDot() {
+        Toast.makeText(this, "Moving dot ...", Toast.LENGTH_SHORT).show();
+        ObjectAnimator ani = ObjectAnimator.ofFloat(dot,
                 "translationX",
-                seg * barlen*segments/space + xoffset + barlen/2*segments/space);
-        ani.setDuration(1000);
+                0, new Random().nextInt(2000));//seg * barlen*segments/space + xoffset + barlen/2*segments/space);
+        ani.setDuration(1);
         ani.start();
 //        dot.setVisibility(View.VISIBLE);
     }
