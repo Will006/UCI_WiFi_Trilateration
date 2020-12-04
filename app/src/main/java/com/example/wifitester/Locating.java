@@ -9,28 +9,35 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class Locating extends AppCompatActivity {
-    private static final int space = 50; // ft
-    private static final int segments = 10;
+    private static final int space = 25; // ft
+    private static final int segments = 5;
     private static final int ymid = 1300;
     private static final int barlen = 1000;
     private static final int xoffset = 40;
+    private final ArrayList<String> arrayList = new ArrayList<>();
+    private ArrayAdapter arrayAdapter;
     static int count = 0;
+    static int fileCount = 0;
     View dot;
     Locator locator;
     WiFiScanner wiFiScanner;
@@ -75,6 +82,7 @@ public class Locating extends AppCompatActivity {
 //    }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,20 +90,36 @@ public class Locating extends AppCompatActivity {
         DrawView dv = new DrawView(this, null);
         int id = View.generateViewId();
         dv.setId(id);
-        ConstraintLayout l = (ConstraintLayout) findViewById(R.id.loc_parent);
+        FrameLayout l = findViewById(R.id.loc_parent);
         l.addView(dv);
 
         dot = findViewById(R.id.dotView);
         dot.setLayoutParams(new FrameLayout.LayoutParams(barlen / 2 * segments / space, barlen / 2 * segments / space));
         dot.setTranslationY(ymid - barlen / 4 * segments / space);
-//        dot = new DotView(this, null);
-//        l.addView(dot);
-        locator = new Locator(50, "RPiHotspot", "RPiHotspot2");
+
+        Button clear = findViewById(R.id.clear_button);
+        Button save = findViewById(R.id.save_button);
+        clear.setOnClickListener(view -> {
+            locator.clear();
+        });
+        save.setOnClickListener(view -> {
+            writeVoting();
+        });
+
+        ListView list = findViewById(R.id.LocatingAPs);
+        arrayAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_list_item_1,
+                arrayList);
+        list.setAdapter(arrayAdapter);
+
         String[] AP = new String[]{"RPiHotspot", "RPiHotspot2"};
+        locator = new Locator(segments, AP[0], AP[1]);
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         BroadcastReceiver bp = new BroadcastReceiver() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onReceive(Context context, Intent intent) {
+                Toast.makeText(getApplicationContext(), "Scanning ... ", Toast.LENGTH_SHORT).show();
                 List<ScanResult> results = wifiManager.getScanResults();
                 // make sure we release hold
                 unregisterReceiver(this);
@@ -104,23 +128,28 @@ public class Locating extends AppCompatActivity {
                     // early return
                     return;
                 }
+                arrayList.clear();
                 for (ScanResult r : results) {
                     if (Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID))) {
                         locator.vote(r);
+                        arrayList.add(r.SSID + ": dBm[" + r.level+ "]");
                     }
                 }
+                arrayList.add(AP[0] + " Max|Min: (" + locator.maxDb1 + "|" + locator.minDb1 + ")");
+                arrayList.add(AP[1] + " Max|Min: (" + locator.maxDb2 + "|" + locator.minDb2 + ")");
+                arrayAdapter.notifyDataSetChanged();
                 ++count;
                 if (count == 60) {
                     writeVoting();
                 }
 //                redrawDot(locator.getMaxSegment());
-
+                h.postDelayed(dotRedraw, 1000);
             }
         };
+//        h.postDelayed(dotRedraw, 1000);
         wiFiScanner = new WiFiScanner(bp, this);
-        h.postDelayed(dotRedraw, 1000);
-        e.scheduleAtFixedRate(dotRedraw, 5, 1, TimeUnit.SECONDS);
-//        wiFiScanner.scanWifi();
+//        e.scheduleAtFixedRate(dotRedraw, 5, 1, TimeUnit.SECONDS);
+        wiFiScanner.scanWifi();
 
     }
 
@@ -129,31 +158,42 @@ public class Locating extends AppCompatActivity {
         @Override
         public void run() {
             dot.setVisibility(View.VISIBLE);
-//            int r = new Random().nextInt(3000);
+//            int r = 25;
+//            int r = new Random().nextInt(25);
             int r = locator.getMaxSegment();
-            int segmentSize = barlen * segments / space;
-            int sol = r * segmentSize + xoffset - segmentSize/4 + segmentSize/2;
+            int segmentSize = barlen / segments;
+            int sol = r * segmentSize + xoffset - barlen / 4 * segments / space + segmentSize/2;
             Toast.makeText(getApplicationContext(), "Moving dot to " + r, Toast.LENGTH_SHORT).show();
 //            dot = findViewById(R.id.dotView);
 //            dot.setTranslationX(r);
             ObjectAnimator ani = ObjectAnimator.ofFloat(dot,
-                    "X",
+                    "translationX",
                     dot.getX(), sol);
             ani.setDuration(1000);
             ani.start();
-            h.postDelayed(this, 1000);
+//            h.postDelayed(this, 5000);
+            h.postDelayed(wiFiScanner::scanWifi, 1000);
         }
     };
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void writeVoting() {
-        DataWriter d = new DataWriter(this, "votingMatrix");
-        d.getFile("i,j,value");
+        DataWriter d = new DataWriter(this, "votingMatrix" + fileCount);
+        fileCount++;
+        d.getFile("");
         int[][] voting = locator.getVoting();
-        for (int i = 0; i < voting.length; i++) {
-            for (int j = 0; j < voting.length; j++) {
-                d.writeData(i,j,voting[i][j]);
-            }
+        for (int[] ints : voting) {
+            d.writeData(Arrays.stream(ints).mapToObj(String::valueOf).toArray(String[]::new));
         }
         d.saveData();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dotRedraw = () -> {
+        };
+        writeVoting();
     }
 }

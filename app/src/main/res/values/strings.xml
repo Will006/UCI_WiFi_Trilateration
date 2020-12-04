@@ -5,4 +5,7 @@
     <string name="stop">Stop</string>
     <string name="record_wifi">Record WiFi</string>
     <string name="title_activity_locating">Locating</string>
+    <string name="clear_and_save">Clear and Save</string>
+    <string name="clear">Clear</string>
+    <string name="save">Save</string>
 </resources>

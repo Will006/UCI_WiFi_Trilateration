@@ -1,22 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/loc_parent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    app:layout_anchorGravity="clip_vertical|center_horizontal"
     tools:context=".Locating">
 
 
-    <FrameLayout
+    <ImageView
+        android:id="@+id/dotView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:srcCompat="@drawable/dot" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/frameLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ImageView
-            android:id="@+id/dotView"
-            android:layout_width="wrap_content"
+        <Button
+            android:id="@+id/save_button"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:srcCompat="@drawable/dot" />
-    </FrameLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_marginStart="32dp"
+            android:layout_marginEnd="32dp"
+            android:text="@string/save"
+            app:layout_constraintBaseline_toBaselineOf="@+id/clear_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/clear_button" />
+
+        <Button
+            android:id="@+id/clear_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="276dp"
+            android:gravity="center"
+            android:text="@string/clear"
+            app:layout_constraintEnd_toStartOf="@+id/save_button"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ListView
+            android:id="@+id/LocatingAPs"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginBottom="24dp"
+            app:layout_constraintBottom_toTopOf="@+id/clear_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>
