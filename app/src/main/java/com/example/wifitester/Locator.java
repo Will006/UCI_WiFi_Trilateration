@@ -97,7 +97,7 @@ public class Locator {
     }
 
     private boolean isOnCircle(double radius, int[] center, int[] point) {
-        return Math.abs((radius * radius) - (sqr(point[0] - center[0]) + sqr(point[1] - center[1]))) < Math.sqrt(radius);
+        return Math.abs((radius * radius) - (sqr(point[0] - center[0]) + sqr(point[1] - center[1]))) < 10; //something with radius
     }
 
     void clear() {

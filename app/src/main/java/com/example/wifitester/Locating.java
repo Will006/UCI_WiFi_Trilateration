@@ -38,6 +38,7 @@ public class Locating extends AppCompatActivity {
     private ArrayAdapter arrayAdapter;
     static int count = 0;
     static int fileCount = 0;
+    static boolean live = true;
     View dot;
     Locator locator;
     WiFiScanner wiFiScanner;
@@ -140,14 +141,17 @@ public class Locating extends AppCompatActivity {
                     arrayList.add(AP[1] + " Max|Min: (" + locator.maxDb2 + "|" + locator.minDb2 + ")");
                     arrayAdapter.notifyDataSetChanged();
                 }
-                ++count;
-                if (count == 60) {
-                    writeVoting();
-                }
+//                ++count;
+//                if (count == 20) {
+//                    Toast.makeText(getApplicationContext(), "Clearing ... ", Toast.LENGTH_SHORT).show();
+//                    locator.clear();
+//                    count = 0;
+//                }
 //                redrawDot(locator.getMaxSegment());
 //                h.postDelayed(dotRedraw, 100);
                 dotRedraw.run();
-                wiFiScanner.scanWifi();
+                if (live)
+                    h.post(wiFiScanner::scanWifi);
             }
         };
 //        h.postDelayed(dotRedraw, 1000);
@@ -199,5 +203,6 @@ public class Locating extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         writeVoting();
+        live = false;
     }
 }
