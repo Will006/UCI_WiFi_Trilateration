@@ -25,7 +25,7 @@ public class DataWriter extends AppCompatActivity {
     /**
      * Prepares/allocates the file
      */
-    void getFile() {
+    void getFile(String header) {
         String today = (new Date()).toString();
         try {
             File file = new File(ctx.getExternalFilesDir(null), today + "_ATLAS_data_" + AP + ".csv");
@@ -33,7 +33,7 @@ public class DataWriter extends AppCompatActivity {
             // make it easier to work with by wrapping it in a print stream
             outStream = new PrintStream(outfileStream);
             // init the top row
-            String header = "Logged Distance, Signal Strength, Calculated Distance (m)";
+//            String header = "Logged Distance, Signal Strength, Calculated Distance (m)";
             outStream.println(header);
             hasFile = true;
         } catch (FileNotFoundException e) {

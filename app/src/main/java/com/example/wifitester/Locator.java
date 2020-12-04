@@ -75,4 +75,8 @@ public class Locator {
         }
         return index;
     }
+
+    int[][] getVoting() {
+        return voting.clone();
+    }
 }

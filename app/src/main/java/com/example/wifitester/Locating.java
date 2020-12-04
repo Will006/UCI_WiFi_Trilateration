@@ -30,6 +30,7 @@ public class Locating extends AppCompatActivity {
     private static final int ymid = 1300;
     private static final int barlen = 1000;
     private static final int xoffset = 40;
+    static int count = 0;
     View dot;
     Locator locator;
     WiFiScanner wiFiScanner;
@@ -108,6 +109,10 @@ public class Locating extends AppCompatActivity {
                         locator.vote(r);
                     }
                 }
+                ++count;
+                if (count == 60) {
+                    writeVoting();
+                }
 //                redrawDot(locator.getMaxSegment());
 
             }
@@ -139,4 +144,16 @@ public class Locating extends AppCompatActivity {
             h.postDelayed(this, 1000);
         }
     };
+
+    void writeVoting() {
+        DataWriter d = new DataWriter(this, "votingMatrix");
+        d.getFile("i,j,value");
+        int[][] voting = locator.getVoting();
+        for (int i = 0; i < voting.length; i++) {
+            for (int j = 0; j < voting.length; j++) {
+                d.writeData(i,j,voting[i][j]);
+            }
+        }
+        d.saveData();
+    }
 }

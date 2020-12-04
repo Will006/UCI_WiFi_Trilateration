@@ -103,6 +103,9 @@ public class MainActivity extends AppCompatActivity {
         listView.setAdapter(adapter);
         // do first scan
         scanWifi();
+        // added to jump automatically to locating activity
+//        Intent intent = new Intent(this, Locating.class);
+//        startActivity(intent);
     }
 
     /**
@@ -148,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                         if (!apLogMap.containsKey(scanResult.SSID)) {
                             DataWriter d = new DataWriter(outside, scanResult.SSID);
                             apLogMap.put(scanResult.SSID, d);
-                            d.getFile();
+                            d.getFile("Logged Distance, Signal Strength, Calculated Distance (m)");
                         }
                         // get writer for this AP and write the data
                         DataWriter dataWriter = apLogMap.get(scanResult.SSID);
