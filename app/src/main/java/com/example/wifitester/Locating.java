@@ -13,16 +13,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.content.ContextCompat;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -58,22 +56,22 @@ public class Locating extends AppCompatActivity {
         }
     }
 
-    class DotView extends View {
-        Paint paint = new Paint();
-        Context ctx;
-
-        DotView(Context ctx, AttributeSet attrs) {
-            super(ctx, attrs);
-            this.ctx = ctx;
-            paint.setColor(Color.BLACK);
-        }
-
-        @Override
-        public void onDraw(Canvas c) {
-            super.onDraw(c);
-            Objects.requireNonNull(ContextCompat.getDrawable(ctx, R.drawable.dot)).draw(c);
-        }
-    }
+//    class DotView extends View {
+//        Paint paint = new Paint();
+//        Context ctx;
+//
+//        DotView(Context ctx, AttributeSet attrs) {
+//            super(ctx, attrs);
+//            this.ctx = ctx;
+//            paint.setColor(Color.BLACK);
+//        }
+//
+//        @Override
+//        public void onDraw(Canvas c) {
+//            super.onDraw(c);
+//            Objects.requireNonNull(ContextCompat.getDrawable(ctx, R.drawable.dot)).draw(c);
+//        }
+//    }
 
 
     @Override
@@ -87,6 +85,8 @@ public class Locating extends AppCompatActivity {
         l.addView(dv);
 
         dot = findViewById(R.id.dotView);
+        dot.setLayoutParams(new FrameLayout.LayoutParams(barlen / 2 * segments / space, barlen / 2 * segments / space));
+        dot.setTranslationY(ymid - barlen / 4 * segments / space);
 //        dot = new DotView(this, null);
 //        l.addView(dot);
         locator = new Locator(50, "RPiHotspot", "RPiHotspot2");
@@ -118,30 +118,25 @@ public class Locating extends AppCompatActivity {
 //        wiFiScanner.scanWifi();
 
     }
+
     Handler h = new Handler();
     Runnable dotRedraw = new Runnable() {
         @Override
         public void run() {
-            int r = new Random().nextInt(3000);
+            dot.setVisibility(View.VISIBLE);
+//            int r = new Random().nextInt(3000);
+            int r = locator.getMaxSegment();
+            int segmentSize = barlen * segments / space;
+            int sol = r * segmentSize + xoffset - segmentSize/4 + segmentSize/2;
             Toast.makeText(getApplicationContext(), "Moving dot to " + r, Toast.LENGTH_SHORT).show();
-            dot = findViewById(R.id.dotView);
-            dot.setTranslationX(r);
-//            ObjectAnimator ani = ObjectAnimator.ofFloat(dot,
-//                    "X",
-//                    0, r);//seg * barlen*segments/space + xoffset + barlen/2*segments/space);
-//        ani.setDuration(1000);
-//            ani.start();
+//            dot = findViewById(R.id.dotView);
+//            dot.setTranslationX(r);
+            ObjectAnimator ani = ObjectAnimator.ofFloat(dot,
+                    "X",
+                    dot.getX(), sol);
+            ani.setDuration(1000);
+            ani.start();
             h.postDelayed(this, 1000);
         }
     };
-
-    void redrawDot() {
-        Toast.makeText(this, "Moving dot ...", Toast.LENGTH_SHORT).show();
-        ObjectAnimator ani = ObjectAnimator.ofFloat(dot,
-                "translationX",
-                0, new Random().nextInt(2000));//seg * barlen*segments/space + xoffset + barlen/2*segments/space);
-        ani.setDuration(1);
-        ani.start();
-//        dot.setVisibility(View.VISIBLE);
-    }
 }

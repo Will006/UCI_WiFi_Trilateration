@@ -16,6 +16,7 @@
             android:id="@+id/dotView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             app:srcCompat="@drawable/dot" />
     </FrameLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
