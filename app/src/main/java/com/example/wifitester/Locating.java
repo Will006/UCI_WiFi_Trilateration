@@ -1,6 +1,5 @@
 package com.example.wifitester;
 
-import android.animation.ObjectAnimator;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -18,10 +17,11 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.dynamicanimation.animation.DynamicAnimation;
+import androidx.dynamicanimation.animation.SpringAnimation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class Locating extends AppCompatActivity {
-    private static final int space = 25; // ft
-    private static final int segments = 5;
+    private static final int space = 500; // ft
+    private static final int segments = 10;
     private static final int ymid = 1300;
     private static final int barlen = 1000;
     private static final int xoffset = 40;
@@ -58,8 +58,8 @@ public class Locating extends AppCompatActivity {
         public void onDraw(Canvas c) {
             super.onDraw(c);
             c.drawLine(xoffset, ymid, xoffset + barlen, ymid, paint);
-            for (int i = 0; i <= space / segments; i++) {
-                c.drawLine(i * barlen * segments / space + xoffset, ymid - 100, i * barlen * segments / space + xoffset, ymid + 100, paint);
+            for (int i = 0; i <= segments; i++) {
+                c.drawLine(i * barlen / segments  + xoffset, ymid - 100, i * barlen / segments + xoffset, ymid + 100, paint);
             }
         }
     }
@@ -94,13 +94,14 @@ public class Locating extends AppCompatActivity {
         l.addView(dv);
 
         dot = findViewById(R.id.dotView);
-        dot.setLayoutParams(new FrameLayout.LayoutParams(barlen / 2 * segments / space, barlen / 2 * segments / space));
-        dot.setTranslationY(ymid - barlen / 4 * segments / space);
+        dot.setLayoutParams(new FrameLayout.LayoutParams(barlen / 2 / segments, barlen / 2 / segments));
+        dot.setTranslationY(ymid - barlen / 4 / segments);
 
         Button clear = findViewById(R.id.clear_button);
         Button save = findViewById(R.id.save_button);
         clear.setOnClickListener(view -> {
             locator.clear();
+            dot.setVisibility(View.GONE);
         });
         save.setOnClickListener(view -> {
             writeVoting();
@@ -119,31 +120,34 @@ public class Locating extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onReceive(Context context, Intent intent) {
-                Toast.makeText(getApplicationContext(), "Scanning ... ", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getApplicationContext(), "Scanning ... ", Toast.LENGTH_SHORT).show();
                 List<ScanResult> results = wifiManager.getScanResults();
                 // make sure we release hold
                 unregisterReceiver(this);
                 // if we got nothing
                 if (results.size() == 0) {
                     // early return
+                    wiFiScanner.scanWifi();
                     return;
                 }
-                arrayList.clear();
-                for (ScanResult r : results) {
-                    if (Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID))) {
+                if (results.stream().anyMatch(r -> Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID)))) {
+                    arrayList.clear();
+                    for (ScanResult r : results.stream().filter(r -> Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID))).toArray(ScanResult[]::new)) {
                         locator.vote(r);
-                        arrayList.add(r.SSID + ": dBm[" + r.level+ "]");
+                        arrayList.add(r.SSID + ": dBm[" + r.level + "] - normalized distance {" + locator.normalized(r) + "}");
                     }
+                    arrayList.add(AP[0] + " Max|Min: (" + locator.maxDb1 + "|" + locator.minDb1 + ")");
+                    arrayList.add(AP[1] + " Max|Min: (" + locator.maxDb2 + "|" + locator.minDb2 + ")");
+                    arrayAdapter.notifyDataSetChanged();
                 }
-                arrayList.add(AP[0] + " Max|Min: (" + locator.maxDb1 + "|" + locator.minDb1 + ")");
-                arrayList.add(AP[1] + " Max|Min: (" + locator.maxDb2 + "|" + locator.minDb2 + ")");
-                arrayAdapter.notifyDataSetChanged();
                 ++count;
                 if (count == 60) {
                     writeVoting();
                 }
 //                redrawDot(locator.getMaxSegment());
-                h.postDelayed(dotRedraw, 1000);
+//                h.postDelayed(dotRedraw, 100);
+                dotRedraw.run();
+                wiFiScanner.scanWifi();
             }
         };
 //        h.postDelayed(dotRedraw, 1000);
@@ -162,17 +166,19 @@ public class Locating extends AppCompatActivity {
 //            int r = new Random().nextInt(25);
             int r = locator.getMaxSegment();
             int segmentSize = barlen / segments;
-            int sol = r * segmentSize + xoffset - barlen / 4 * segments / space + segmentSize/2;
-            Toast.makeText(getApplicationContext(), "Moving dot to " + r, Toast.LENGTH_SHORT).show();
+            int sol = r * segmentSize + xoffset - barlen / 4 * segments / space + segmentSize / 2;
+//            Toast.makeText(getApplicationContext(), "Moving dot to " + r, Toast.LENGTH_SHORT).show();
 //            dot = findViewById(R.id.dotView);
 //            dot.setTranslationX(r);
-            ObjectAnimator ani = ObjectAnimator.ofFloat(dot,
-                    "translationX",
-                    dot.getX(), sol);
-            ani.setDuration(1000);
-            ani.start();
+            SpringAnimation springAnimation = new SpringAnimation(dot, DynamicAnimation.X, sol);
+            springAnimation.start();
+//            ObjectAnimator ani = ObjectAnimator.ofFloat(dot,
+//                    "translationX",
+//                    0, sol);
+//            ani.setDuration(1000);
+//            ani.start();
 //            h.postDelayed(this, 5000);
-            h.postDelayed(wiFiScanner::scanWifi, 1000);
+//            h.postDelayed(wiFiScanner::scanWifi, 500);
         }
     };
 
@@ -192,8 +198,6 @@ public class Locating extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        dotRedraw = () -> {
-        };
         writeVoting();
     }
 }
