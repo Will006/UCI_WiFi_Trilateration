@@ -9,10 +9,12 @@ public class Locator {
     private int[][] voting;
     private final String ap1;
     private final String ap2;
+    // TODO: change these if your using the normalized version, set max/min by checking signal strength at each AP
     final int maxDb1 = -26;
     final int minDb1 = -72;
     final int maxDb2 = -20;
     final int minDb2 = -47;
+    //
 
     Locator(int size, String ap1, String ap2) {
         voting = new int[size][size];
@@ -57,7 +59,9 @@ public class Locator {
         // go through and vote
         for (int i = 0; i < voting.length; i++) {
             for (int j = 0; j < voting.length; j++) {
-                if (isOnCircle(Math.max(normalized, 0), coords, new int[]{i, j})) {
+                // TODO: change first param if you want to use signal to feet
+                if (isOnCircle(Math.max(normalized, 0.01), coords, new int[]{i, j})) {
+                //
                     Log.d(scanResult.SSID, "Circle Error " + Math.abs((normalized * normalized) - (sqr(coords[0] - i) + sqr(coords[1] - j))));
                     voting[i][j] += 1;
                 }
@@ -97,13 +101,14 @@ public class Locator {
     }
 
     private boolean isOnCircle(double radius, int[] center, int[] point) {
-        return Math.abs((radius * radius) - (sqr(point[0] - center[0]) + sqr(point[1] - center[1]))) < 10; //something with radius
+        return Math.abs((radius * radius) - (sqr(point[0] - center[0]) + sqr(point[1] - center[1]))) < 10; // TODO: something with radius
     }
 
     void clear() {
         voting = new int[voting.length][voting.length];
     }
 
+    // TODO: gets the x value, may need to fudge with this
     int getMaxSegment() {
         Integer max = -1;
         int index = -1;

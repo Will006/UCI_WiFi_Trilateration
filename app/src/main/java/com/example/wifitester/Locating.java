@@ -29,8 +29,10 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class Locating extends AppCompatActivity {
+    // TODO: play around with these, segment is number of cells, space may be a real world measurement
     private static final int space = 500; // ft
     private static final int segments = 10;
+    //
     private static final int ymid = 1300;
     private static final int barlen = 1000;
     private static final int xoffset = 40;
@@ -114,7 +116,9 @@ public class Locating extends AppCompatActivity {
                 arrayList);
         list.setAdapter(arrayAdapter);
 
+        // TODO: change these for your AP's
         String[] AP = new String[]{"RPiHotspot", "RPiHotspot2"};
+        //
         locator = new Locator(segments, AP[0], AP[1]);
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         BroadcastReceiver bp = new BroadcastReceiver() {
