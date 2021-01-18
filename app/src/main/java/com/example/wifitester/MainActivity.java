@@ -155,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                         // get writer for this AP and write the data
                         DataWriter dataWriter = apLogMap.get(scanResult.SSID);
+                        assert dataWriter != null;
                         dataWriter.writeData(realDistance, scanResult.level, calculateDistanceMeters(scanResult.level, scanResult.frequency));
                     } else {
                         // add to view list
@@ -229,7 +230,6 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.locate_menu) {
             Intent intent = new Intent(this, Locating.class);
             startActivity(intent);

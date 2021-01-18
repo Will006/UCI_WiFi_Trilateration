@@ -5,16 +5,16 @@ import java.util.HashMap;
 
 class AccessPoint
 {
-    static String AP_Extension = "TrilaterationAP";
-    String SSID;
-    int Location[];
+    static final String AP_Extension = "TrilaterationAP";
+    final String SSID;
+    final int[] Location;
 
-    AccessPoint(String SSID_In, int Location_In[])
+    AccessPoint(String SSID_In, int[] Location_In)
     {
         SSID=SSID_In;
         Location = Location_In;
     }
-    static private HashMap<String, AccessPoint> AP_DataBase = new HashMap<String, AccessPoint>() {{
+    static private final HashMap<String, AccessPoint> AP_DataBase = new HashMap<String, AccessPoint>() {{
         put("BIO251_A_"+AP_Extension, new AccessPoint("BIO251_A_"+AP_Extension, new int[]{0, 10, 0}));
         put("BIO251_B_"+AP_Extension, new AccessPoint("BIO251_B_"+AP_Extension, new int[]{0, 10, 0}));
         put("RPiHotspot", new AccessPoint("RPiHotspot", new int[]{0, 10, 0}));
