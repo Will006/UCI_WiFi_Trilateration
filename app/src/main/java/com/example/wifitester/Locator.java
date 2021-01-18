@@ -3,97 +3,97 @@ package com.example.wifitester;
 import android.net.wifi.ScanResult;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
+class APInfo {
+    public final String name;
+    public final int minDB;
+    public final int maxDB;
+
+    public APInfo(String name, int minDB, int maxDB) {
+        this.name = name;
+        this.minDB = minDB;
+        this.maxDB = maxDB;
+    }
+}
 
 public class Locator {
+    final int circleThresh = 300;
     private int[][] voting;
-    private final String ap1;
-    private final String ap2;
-    // TODO: change these if your using the normalized version, set max/min by checking signal strength at each AP
-    final int maxDb1 = -26;
-    final int minDb1 = -72;
-    final int maxDb2 = -20;
-    final int minDb2 = -47;
+    final List<APInfo> aps;
+    private final Normalizer normalizer;
     //
 
-    Locator(int size, String ap1, String ap2) {
+    public Locator(int size, String ap1, String ap2) {
+        // TODO: change these if you're using the normalized version, set max/min by checking signal strength at each AP
+        // TODO: set these via some setup thing
+        final int maxDb1 = -26;
+        final int minDB1 = -72;
+        final int maxDB2 = -20;
+        final int minDB2 = -47;
+
         voting = new int[size][size];
-        this.ap1 = ap1;
-        this.ap2 = ap2;
+        this.aps = new ArrayList<>();
+        this.aps.add(new APInfo(ap1, minDB1, maxDb1));
+        this.aps.add(new APInfo(ap2, minDB2, maxDB2));
+
+        normalizer = new Normalizer();
     }
 
-    void vote(ScanResult scanResult) {
-        double dist = calculateDistanceFeet(scanResult.level, scanResult.frequency);
-        Log.d(scanResult.SSID, "dist is " + dist);
+    private APInfo getAPbyName(String apName) throws NoMatch {
+        Optional<APInfo> ap = aps.stream().filter((apInfo -> apInfo.name.equals(apName))).findFirst();
+        if (ap.isPresent()) {
+            return ap.get();
+        }
+        throw new NoMatch();
+    }
+
+    // TODO: change to whatever normalization we use at the end
+    public double getNormalized(ScanResult scanResult) throws NoMatch {
+        return normalizer.normalizedByMeters(scanResult, getAPbyName(scanResult.SSID));
+    }
+
+    void vote(ScanResult scanResult) throws NoMatch {
+//        double dist = calculateDistanceFeet(scanResult.level, scanResult.frequency);
+//        Log.d(scanResult.SSID, "dist is " + dist);
 //        Log.d(scanResult.SSID,  "segment is " + dist / voting.length);
 
-
-        int[] coords = new int[]{-1, -1};
-        double range = -1;
-        double min = -1;
+        // TODO: remove this once we do a good setup
+        int[] apMatrixCell = new int[]{-1, -1};
         // aps will have y = 0
-        if (ap1.equals(scanResult.SSID)) {
-            coords = new int[]{0, 0};
-            double max = Math.pow(10, maxDb1 / 10.0);
-            min = Math.pow(10, minDb1 / 10.0);
-            range = max - min;
+        if (aps.get(0).name.equals(scanResult.SSID)) {
+            apMatrixCell = new int[]{0, 0};
         }
-        if (ap2.equals(scanResult.SSID)) {
-            coords = new int[]{voting.length - 1, 0};
-            // dBm to linear scale
-            double max = Math.pow(10, maxDb2 / 10.0);
-            min = Math.pow(10, minDb2 / 10.0);
-            range = max - min;
+        if (aps.get(1).name.equals(scanResult.SSID)) {
+            apMatrixCell = new int[]{voting.length - 1, 0};
         }
-        if (Arrays.equals(coords, new int[]{-1, -1})) {
+        if (Arrays.equals(apMatrixCell, new int[]{-1, -1})) {
             // fail
             return;
         }
+        // END
 
-        Log.d(scanResult.SSID, "signal is " + scanResult.level);
-        double factor = range / voting.length;
-        Log.d(scanResult.SSID, "lin db is " + Math.pow(10, scanResult.level / 10.0));
+//        Log.d(scanResult.SSID, "signal is " + scanResult.level);
+//        Log.d(scanResult.SSID, "lin db is " + Math.pow(10, scanResult.level / 10.0));
+
         // linear scale - min gives range starting at 0 for correct setup to / factor
-        double normalized = voting.length - (Math.pow(10, scanResult.level / 10.0) - min) / factor;
-        Log.d(scanResult.SSID, "normalized is " + normalized);
+        double normalized = getNormalized(scanResult);
+
+//        Log.d(scanResult.SSID, "normalized is " + normalized);
+
         // go through and vote
         for (int i = 0; i < voting.length; i++) {
             for (int j = 0; j < voting.length; j++) {
                 // TODO: change first param if you want to use signal to feet
-                if (isOnCircle(Math.max(normalized, 0.01), coords, new int[]{i, j})) {
-                //
-                    Log.d(scanResult.SSID, "Circle Error " + Math.abs((normalized * normalized) - (sqr(coords[0] - i) + sqr(coords[1] - j))));
+                if (isOnCircle(Math.max(normalized, 0.01), apMatrixCell, new int[]{i, j})) {
+                    Log.d(scanResult.SSID, "Circle Error " + Math.abs((normalized * normalized) - (sqr(apMatrixCell[0] - i) + sqr(apMatrixCell[1] - j))));
                     voting[i][j] += 1;
                 }
             }
         }
-    }
-
-    double normalized(ScanResult scanResult) {
-        double range = -1;
-        double min = -1;
-        if (ap1.equals(scanResult.SSID)) {
-            double max = Math.pow(10, maxDb1 / 10.0);
-            min = Math.pow(10, minDb1 / 10.0);
-            range = max - min;
-        }
-        if (ap2.equals(scanResult.SSID)) {
-            double max = Math.pow(10, maxDb2 / 10.0);
-            min = Math.pow(10, minDb2 / 10.0);
-            range = max - min;
-        }
-        double factor = range / voting.length;
-        return Math.max(voting.length - (Math.pow(10, scanResult.level / 10.0) - min) / factor, 0);
-    }
-
-    //https://stackoverflow.com/questions/11217674/how-to-calculate-distance-from-wifi-router-using-signal-strength
-    private double calculateDistanceMeters(double signalLevelInDb, double freqInMHz) {
-        double exp = (27.55 - (20 * Math.log10(freqInMHz)) + Math.abs(signalLevelInDb)) / 20.0;
-        return Math.pow(10.0, exp);
-    }
-
-    private double calculateDistanceFeet(double signalLevelInDb, double freqInMHz) {
-        return calculateDistanceMeters(signalLevelInDb, freqInMHz) * 3.28084;
     }
 
     private int sqr(int n) {
@@ -101,7 +101,7 @@ public class Locator {
     }
 
     private boolean isOnCircle(double radius, int[] center, int[] point) {
-        return Math.abs((radius * radius) - (sqr(point[0] - center[0]) + sqr(point[1] - center[1]))) < 10; // TODO: something with radius
+        return Math.abs((radius * radius) - (sqr(point[0] - center[0]) + sqr(point[1] - center[1]))) < this.circleThresh; // TODO: something with radius
     }
 
     void clear() {
@@ -110,7 +110,7 @@ public class Locator {
 
     // TODO: gets the x value, may need to fudge with this
     int getMaxSegment() {
-        Integer max = -1;
+        int max = -1;
         int index = -1;
         for (int i = 0; i < voting.length; i++) {
             for (int j = 0; j < voting.length; j++) {

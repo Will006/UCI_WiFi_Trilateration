@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,7 +32,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 public class Locating extends AppCompatActivity {
     // TODO: play around with these, segment is number of cells, space may be a real world measurement
     private static final int space = 500; // ft
-    private static final int segments = 10;
+    private static final int segments = 100;
     //
     private static final int ymid = 1300;
     private static final int barlen = 1000;
@@ -47,7 +48,7 @@ public class Locating extends AppCompatActivity {
     ScheduledThreadPoolExecutor e = new ScheduledThreadPoolExecutor(1);
 
 
-    class DrawView extends View {
+    static class DrawView extends View {
         Paint paint = new Paint();
         Context ctx;
 
@@ -62,7 +63,7 @@ public class Locating extends AppCompatActivity {
             super.onDraw(c);
             c.drawLine(xoffset, ymid, xoffset + barlen, ymid, paint);
             for (int i = 0; i <= segments; i++) {
-                c.drawLine(i * barlen / segments  + xoffset, ymid - 100, i * barlen / segments + xoffset, ymid + 100, paint);
+                c.drawLine(i * barlen / segments + xoffset, ymid - 100, i * barlen / segments + xoffset, ymid + 100, paint);
             }
         }
     }
@@ -104,10 +105,16 @@ public class Locating extends AppCompatActivity {
         Button save = findViewById(R.id.save_button);
         clear.setOnClickListener(view -> {
             locator.clear();
+            Toast.makeText(this,
+                    "Cleared voting matrix.",
+                    Toast.LENGTH_SHORT).show();
             dot.setVisibility(View.GONE);
         });
         save.setOnClickListener(view -> {
             writeVoting();
+            Toast.makeText(this,
+                    "Dumped matrix to file. Continuing to vote to current matrix.",
+                    Toast.LENGTH_SHORT).show();
         });
 
         ListView list = findViewById(R.id.LocatingAPs);
@@ -117,7 +124,7 @@ public class Locating extends AppCompatActivity {
         list.setAdapter(arrayAdapter);
 
         // TODO: change these for your AP's
-        String[] AP = new String[]{"RPiHotspot", "RPiHotspot2"};
+        String[] AP = new String[]{"RPiHotspot", "vadai7"};
         //
         locator = new Locator(segments, AP[0], AP[1]);
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -137,13 +144,18 @@ public class Locating extends AppCompatActivity {
                 }
                 if (results.stream().anyMatch(r -> Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID)))) {
                     arrayList.clear();
-                    for (ScanResult r : results.stream().filter(r -> Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID))).toArray(ScanResult[]::new)) {
-                        locator.vote(r);
-                        arrayList.add(r.SSID + ": dBm[" + r.level + "] - normalized distance {" + locator.normalized(r) + "}");
+                    try {
+                        for (ScanResult r : results.stream().filter(r -> Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID))).toArray(ScanResult[]::new)) {
+                            Toast.makeText(getApplicationContext(), "Voting ... ", Toast.LENGTH_SHORT).show();
+                            locator.vote(r);
+                            arrayList.add(r.SSID + ": dBm[" + r.level + "] - normalized distance {" + locator.getNormalized(r) + "}");
+                        }
+                        arrayList.add(AP[0] + " Max|Min: (" + locator.aps.get(0).maxDB + "|" + locator.aps.get(0).minDB + ")");
+                        arrayList.add(AP[1] + " Max|Min: (" + locator.aps.get(1).maxDB + "|" + locator.aps.get(1).minDB + ")");
+                        arrayAdapter.notifyDataSetChanged();
+                    } catch (NoMatch n) {
+                        return;
                     }
-                    arrayList.add(AP[0] + " Max|Min: (" + locator.maxDb1 + "|" + locator.minDb1 + ")");
-                    arrayList.add(AP[1] + " Max|Min: (" + locator.maxDb2 + "|" + locator.minDb2 + ")");
-                    arrayAdapter.notifyDataSetChanged();
                 }
 //                ++count;
 //                if (count == 20) {
