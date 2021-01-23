@@ -25,15 +25,16 @@ public class Locator {
     private int[][] voting;
     final List<APInfo> aps;
     private final Normalizer normalizer;
+    private int votes;
     //
 
     public Locator(int size, String ap1, String ap2) {
         // TODO: change these if you're using the normalized version, set max/min by checking signal strength at each AP
         // TODO: set these via some setup thing
-        final int maxDb1 = -26;
-        final int minDB1 = -72;
-        final int maxDB2 = -20;
-        final int minDB2 = -47;
+        final int maxDb1 = -25;
+        final int minDB1 = -65;
+        final int maxDB2 = -25;
+        final int minDB2 = -65;
 
         voting = new int[size][size];
         this.aps = new ArrayList<>();
@@ -75,6 +76,7 @@ public class Locator {
             return;
         }
         // END
+        ++votes;
 
 //        Log.d(scanResult.SSID, "signal is " + scanResult.level);
 //        Log.d(scanResult.SSID, "lin db is " + Math.pow(10, scanResult.level / 10.0));
@@ -106,6 +108,7 @@ public class Locator {
 
     void clear() {
         voting = new int[voting.length][voting.length];
+        votes = 0;
     }
 
     // TODO: gets the x value, may need to fudge with this
@@ -126,5 +129,9 @@ public class Locator {
 
     int[][] getVoting() {
         return voting.clone();
+    }
+
+    int getNumVotes() {
+        return votes;
     }
 }

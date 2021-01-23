@@ -90,6 +90,7 @@ public class Locating extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        live = true;
         setContentView(R.layout.activity_locating);
         DrawView dv = new DrawView(this, null);
         int id = View.generateViewId();
@@ -124,7 +125,7 @@ public class Locating extends AppCompatActivity {
         list.setAdapter(arrayAdapter);
 
         // TODO: change these for your AP's
-        String[] AP = new String[]{"RPiHotspot", "vadai7"};
+        String[] AP = new String[]{"RPiHotspot", "RPiHotspot2"};
         //
         locator = new Locator(segments, AP[0], AP[1]);
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
@@ -146,7 +147,7 @@ public class Locating extends AppCompatActivity {
                     arrayList.clear();
                     try {
                         for (ScanResult r : results.stream().filter(r -> Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID))).toArray(ScanResult[]::new)) {
-                            Toast.makeText(getApplicationContext(), "Voting ... ", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Voting ... " + locator.getNumVotes(), Toast.LENGTH_SHORT).show();
                             locator.vote(r);
                             arrayList.add(r.SSID + ": dBm[" + r.level + "] - normalized distance {" + locator.getNormalized(r) + "}");
                         }
@@ -218,7 +219,7 @@ public class Locating extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        writeVoting();
+//        writeVoting();
         live = false;
     }
 }

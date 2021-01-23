@@ -47,6 +47,9 @@ public class Normalizer {
     public double normalizedByMeters(ScanResult scanResult, APInfo ap) {
         double meters = calculateDistanceMeters(scanResult.level, scanResult.frequency);
         double max = calculateDistanceMeters(ap.minDB, scanResult.frequency);
+        if (meters > max) {
+            return max;
+        }
         return meters / max * 100;
     }
 
