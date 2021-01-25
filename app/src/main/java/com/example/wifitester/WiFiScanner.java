@@ -30,7 +30,7 @@ public class WiFiScanner {
      */
     public void scanWifi() {
         // get the wifi service
-        WifiManager wifiManager = (WifiManager) ctx.getSystemService(Context.WIFI_SERVICE);
+        WifiManager wifiManager = (WifiManager) ctx.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
         if (!wifiManager.isWifiEnabled()) {
             Toast.makeText(ctx, "WiFi is disabled ... We need to enable it", Toast.LENGTH_LONG).show();
