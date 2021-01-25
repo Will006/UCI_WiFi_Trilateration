@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
@@ -19,7 +18,6 @@ import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.dynamicanimation.animation.DynamicAnimation;
 import androidx.dynamicanimation.animation.SpringAnimation;
@@ -85,8 +83,6 @@ public class Locating extends AppCompatActivity {
 //        }
 //    }
 
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -130,7 +126,6 @@ public class Locating extends AppCompatActivity {
         locator = new Locator(segments, AP[0], AP[1]);
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         BroadcastReceiver bp = new BroadcastReceiver() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onReceive(Context context, Intent intent) {
 //                Toast.makeText(getApplicationContext(), "Scanning ... ", Toast.LENGTH_SHORT).show();
@@ -203,7 +198,6 @@ public class Locating extends AppCompatActivity {
         }
     };
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     void writeVoting() {
         DataWriter d = new DataWriter(this, "votingMatrix" + fileCount);
         fileCount++;
@@ -215,7 +209,6 @@ public class Locating extends AppCompatActivity {
         d.saveData();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onDestroy() {
         super.onDestroy();

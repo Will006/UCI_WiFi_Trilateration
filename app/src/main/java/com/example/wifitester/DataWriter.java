@@ -1,9 +1,8 @@
 package com.example.wifitester;
 
 import android.content.Context;
-import android.os.Build;
+import android.text.TextUtils;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
@@ -54,9 +53,8 @@ public class DataWriter extends AppCompatActivity {
         outStream.println(realDistance + "," + signalStrength + "," + calculatedDistance);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     void writeData(String[] args) {
-        outStream.println(String.join(",", args));
+        outStream.println(TextUtils.join(",", args));
     }
 
     /**
