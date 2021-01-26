@@ -1,5 +1,6 @@
 package com.example.wifitester;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -60,10 +61,10 @@ public class MainActivity extends AppCompatActivity {
         Button buttonRecord = findViewById(R.id.RecordButton);
         Button buttonStop = findViewById(R.id.StopButton);
         // utility function to change modes
-        Runnable changeMode = () -> {
+        @SuppressLint("WrongConstant") Runnable changeMode = () -> {
             recordMode = !recordMode;
             for (Button button : Arrays.asList(buttonScan, buttonRecWiFi, buttonRecord, buttonStop))
-                button.setVisibility((int) (button.getVisibility() ^ View.GONE));
+                button.setVisibility(button.getVisibility() ^ View.GONE);
         };
 
         // These are the button callback functions

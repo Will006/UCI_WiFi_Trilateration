@@ -26,7 +26,6 @@ import androidx.dynamicanimation.animation.SpringAnimation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class Locating extends AppCompatActivity {
     // TODO: play around with these, segment is number of cells, space may be a real world measurement
@@ -38,22 +37,21 @@ public class Locating extends AppCompatActivity {
     private static final int xoffset = 40;
     private final ArrayList<String> arrayList = new ArrayList<>();
     private ArrayAdapter arrayAdapter;
-    static int count = 0;
+//    static int count = 0;
     static int fileCount = 0;
     static boolean live = true;
     View dot;
     Locator locator;
     WiFiScanner wiFiScanner;
-    ScheduledThreadPoolExecutor e = new ScheduledThreadPoolExecutor(1);
 
 
     static class DrawView extends View {
         final Paint paint = new Paint();
-        final Context ctx;
+//        final Context ctx;
 
         DrawView(Context ctx) {
             super(ctx, null);
-            this.ctx = ctx;
+//            this.ctx = ctx;
             paint.setColor(Color.BLACK);
         }
 
@@ -62,7 +60,7 @@ public class Locating extends AppCompatActivity {
             super.onDraw(c);
             c.drawLine(xoffset, ymid, xoffset + barlen, ymid, paint);
             for (int i = 0; i <= segments; i++) {
-                c.drawLine(i * barlen / segments + xoffset, ymid - 100, i * barlen / segments + xoffset, ymid + 100, paint);
+                c.drawLine(i * barlen / (float)segments + xoffset, ymid - 100, i * barlen / (float)segments + xoffset, ymid + 100, paint);
             }
         }
     }
@@ -97,7 +95,7 @@ public class Locating extends AppCompatActivity {
 
         dot = findViewById(R.id.dotView);
         dot.setLayoutParams(new FrameLayout.LayoutParams(barlen / 2 / segments, barlen / 2 / segments));
-        dot.setTranslationY(ymid - barlen / 4 / segments);
+        dot.setTranslationY(ymid - barlen / 4f / (float)segments);
 
         Button clear = findViewById(R.id.clear_button);
         Button save = findViewById(R.id.save_button);

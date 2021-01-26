@@ -15,7 +15,7 @@ import java.util.Date;
 public class DataWriter extends AppCompatActivity {
     private FileOutputStream outfileStream;
     private PrintStream outStream;
-    boolean hasFile;
+//    boolean hasFile;
     private final Context ctx;
     private final String AP;
     DataWriter(Context ctx, String ap) {
@@ -36,10 +36,10 @@ public class DataWriter extends AppCompatActivity {
             // init the top row
 //            String header = "Logged Distance, Signal Strength, Calculated Distance (m)";
             outStream.println(header);
-            hasFile = true;
+//            hasFile = true;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            hasFile = false;
+//            hasFile = false;
         }
     }
 
