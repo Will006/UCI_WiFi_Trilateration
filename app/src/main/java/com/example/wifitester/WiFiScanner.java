@@ -16,8 +16,8 @@ public class WiFiScanner {
 
      */
 
-    BroadcastReceiver wifiReceiver;
-    Context ctx;
+    final BroadcastReceiver wifiReceiver;
+    final Context ctx;
     WiFiScanner(BroadcastReceiver b, Context ctx) {
         wifiReceiver = b;
         this.ctx = ctx;

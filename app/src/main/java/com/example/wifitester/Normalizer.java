@@ -6,9 +6,9 @@ class NoMatch extends Exception {
 }
 
 class NormalizationInfo {
-    public double max;
-    public double min;
-    public double range;
+    public final double max;
+    public final double min;
+    public final double range;
 
     NormalizationInfo(double max, double min, double range) {
         this.range = range;
