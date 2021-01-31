@@ -1,9 +1,14 @@
 package com.example.wifitester;
 
 import android.content.Context;
-import android.text.TextUtils;
+import android.os.Build;
+import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -18,6 +23,7 @@ public class DataWriter extends AppCompatActivity {
     boolean hasFile;
     private final Context ctx;
     private final String AP;
+    File file;
     DataWriter(Context ctx, String ap) {
         this.ctx = ctx;
         this.AP = ap;
@@ -29,8 +35,9 @@ public class DataWriter extends AppCompatActivity {
     void getFile(String header) {
         String today = (new Date()).toString();
         try {
-            File file = new File(ctx.getExternalFilesDir(null), today + "_ATLAS_data_" + AP + ".csv");
+            file = new File(ctx.getExternalFilesDir(null), today + "_ATLAS_data_" + AP + ".csv");
             outfileStream = new FileOutputStream(file);
+
             // make it easier to work with by wrapping it in a print stream
             outStream = new PrintStream(outfileStream);
             // init the top row
@@ -53,8 +60,9 @@ public class DataWriter extends AppCompatActivity {
         outStream.println(realDistance + "," + signalStrength + "," + calculatedDistance);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     void writeData(String[] args) {
-        outStream.println(TextUtils.join(",", args));
+        outStream.println(String.join(",", args));
     }
 
     /**
@@ -65,7 +73,20 @@ public class DataWriter extends AppCompatActivity {
             outStream.flush();
             outfileStream.flush();
             outfileStream.close();
-        } catch (IOException e) {
+//{"name":"Whatever was scanned"}
+            JSONObject postData = new JSONObject();
+
+            postData.put("name", 4);
+
+
+            new PostReq().execute("http://192.168.4.1:5000/", postData.toString());
+
+            /*if(file.exists())
+            {
+                PostReq post = new PostReq();
+                post.UploadData(file.getAbsolutePath());
+            }*/
+        } catch (IOException | JSONException e) {
             e.printStackTrace();
         }
     }

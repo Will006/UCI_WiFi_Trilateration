@@ -1,8 +1,12 @@
 package com.example.wifitester;
 
+import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -11,6 +15,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -20,11 +25,59 @@ import java.net.URL;
 
 
 
-public class PostReq extends MainActivity
+public class PostReq extends AsyncTask<String, Void, String>
 {
 
+    public String ServerResponse;
+    @Override
+    protected String doInBackground(String... strings)
+    {String data = "";
 
-    public static void MyUploadData()
+        HttpURLConnection httpURLConnection = null;
+
+        try {
+            httpURLConnection = (HttpURLConnection) new URL(strings[0]).openConnection();
+            httpURLConnection.setRequestMethod("POST");
+            httpURLConnection.setRequestProperty("Content-Type", "application/json");
+            httpURLConnection.setRequestProperty("Accept", "application/json");
+            httpURLConnection.setDoOutput(true);
+
+            DataOutputStream wr = new DataOutputStream(httpURLConnection.getOutputStream());
+            JSONObject postJson = new JSONObject();
+            postJson.put("name", strings[1]);
+            wr.write(postJson.toString().getBytes());
+            wr.flush();
+            wr.close();
+
+            InputStream in = httpURLConnection.getInputStream();
+            InputStreamReader inputStreamReader = new InputStreamReader(in);
+
+            int inputStreamData = inputStreamReader.read();
+            while (inputStreamData != -1) {
+                char current = (char) inputStreamData;
+                inputStreamData = inputStreamReader.read();
+                data += current;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (httpURLConnection != null) {
+                httpURLConnection.disconnect();
+            }
+        }
+
+        return data;
+    }
+    @Override
+    protected void onPostExecute(String result) {
+        ServerResponse = result;
+        super.onPostExecute(result);
+        Log.e("TAG", result); // this is expecting a response code to be sent from your server upon receiving the POST data
+
+    }
+
+
+    public static void ConnectionRefuse()
     {
         try {
             URL url = new URL ("http://127.0.0.1:5000/");
@@ -125,12 +178,12 @@ public class PostReq extends MainActivity
             // Responses from the server (code and message)
             conn.setConnectTimeout(2000); // allow 2 seconds timeout.
             int rcode = conn.getResponseCode();
-            if (rcode == 200) Toast.makeText(getApplicationContext(), "Success!!", Toast.LENGTH_LONG).show();
-            else Toast.makeText(this, "Failed!!", Toast.LENGTH_LONG).show();
+            //if (rcode == 200) Toast.makeText(getApplicationContext(), "Success!!", Toast.LENGTH_LONG).show();
+            //else Toast.makeText(this, "Failed!!", Toast.LENGTH_LONG).show();
             fis.close();
             os.flush();
             os.close();
-            Toast.makeText(getApplicationContext(), "Record Uploaded!", Toast.LENGTH_LONG).show();
+            //Toast.makeText(getApplicationContext(), "Record Uploaded!", Toast.LENGTH_LONG).show();
         }
         catch (Exception ex)
         {
