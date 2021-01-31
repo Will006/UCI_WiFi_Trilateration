@@ -28,18 +28,21 @@ public class Locator {
     private int votes;
     //
 
-    public Locator(int size, String ap1, String ap2) {
+    public Locator(int size, String ap1, String ap2, String ap3) {
         // TODO: change these if you're using the normalized version, set max/min by checking signal strength at each AP
         // TODO: set these via some setup thing
         final int maxDb1 = -25;
         final int minDB1 = -65;
         final int maxDB2 = -25;
         final int minDB2 = -65;
+        final int maxDB3 = -25;
+        final int minDB3 = -65;
 
         voting = new int[size][size];
         this.aps = new ArrayList<>();
         this.aps.add(new APInfo(ap1, minDB1, maxDb1));
         this.aps.add(new APInfo(ap2, minDB2, maxDB2));
+        this.aps.add(new APInfo(ap3, minDB3, maxDB3));
 
         normalizer = new Normalizer();
     }
@@ -64,12 +67,16 @@ public class Locator {
 
         // TODO: remove this once we do a good setup
         int[] apMatrixCell = new int[]{-1, -1};
+
         // aps will have y = 0
         if (aps.get(0).name.equals(scanResult.SSID)) {
             apMatrixCell = new int[]{0, 0};
         }
         if (aps.get(1).name.equals(scanResult.SSID)) {
             apMatrixCell = new int[]{voting.length - 1, 0};
+        }
+        if (aps.get(2).name.equals(scanResult.SSID)) {
+            apMatrixCell = new int[]{0, voting[0].length -1};
         }
         if (Arrays.equals(apMatrixCell, new int[]{-1, -1})) {
             // fail

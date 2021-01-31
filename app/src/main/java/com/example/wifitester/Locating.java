@@ -121,9 +121,9 @@ public class Locating extends AppCompatActivity {
         list.setAdapter(arrayAdapter);
 
         // TODO: change these for your AP's
-        String[] AP = new String[]{"RPiHotspot", "RPiHotspot2"};
+        String[] AP = new String[]{"RPiHotspot", "VDCN-Resident", "WIN-D6OH58RJKSU 4714"};
         //
-        locator = new Locator(segments, AP[0], AP[1]);
+        locator = new Locator(segments, AP[0], AP[1], AP[2]);
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         BroadcastReceiver bp = new BroadcastReceiver() {
             @Override
@@ -148,6 +148,7 @@ public class Locating extends AppCompatActivity {
                         }
                         arrayList.add(AP[0] + " Max|Min: (" + locator.aps.get(0).maxDB + "|" + locator.aps.get(0).minDB + ")");
                         arrayList.add(AP[1] + " Max|Min: (" + locator.aps.get(1).maxDB + "|" + locator.aps.get(1).minDB + ")");
+                        arrayList.add(AP[2] + " Max|Min: (" + locator.aps.get(2).maxDB + "|" + locator.aps.get(2).minDB + ")");
                         arrayAdapter.notifyDataSetChanged();
                     } catch (NoMatch n) {
                         return;
