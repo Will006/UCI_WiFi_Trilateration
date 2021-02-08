@@ -2,12 +2,22 @@ package com.example.wifitester;
 
 import android.content.Context;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Date;
@@ -18,6 +28,7 @@ public class DataWriter extends AppCompatActivity {
 //    boolean hasFile;
     private final Context ctx;
     private final String AP;
+    private File file;
     DataWriter(Context ctx, String ap) {
         this.ctx = ctx;
         this.AP = ap;
@@ -29,7 +40,7 @@ public class DataWriter extends AppCompatActivity {
     void getFile(String header) {
         String today = (new Date()).toString();
         try {
-            File file = new File(ctx.getExternalFilesDir(null), today + "_ATLAS_data_" + AP + ".csv");
+            file = new File(ctx.getExternalFilesDir(null), today + "_ATLAS_data_" + AP + ".csv");
             outfileStream = new FileOutputStream(file);
             // make it easier to work with by wrapping it in a print stream
             outStream = new PrintStream(outfileStream);
@@ -62,11 +73,49 @@ public class DataWriter extends AppCompatActivity {
      */
     void saveData() {
         try {
+            sendData();
             outStream.flush();
             outfileStream.flush();
             outfileStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    StringBuilder readFile() {
+        //Read text from file
+        StringBuilder text = new StringBuilder();
+
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+                text.append('\n');
+            }
+            br.close();
+        }
+        catch (IOException e) {
+            //You'll need to add proper error handling here
+        }
+        return text;
+    }
+
+    void sendData() {
+        RequestQueue queue = Volley.newRequestQueue(ctx);
+        String url = "http://80435051e03d.ngrok.io/";
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("contents", readFile().toString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return;
+        }
+        JsonObjectRequest request = new JsonObjectRequest(url,
+                jsonObject,
+                response -> Log.d("response", String.valueOf(response)),
+                error -> Log.e("response error", error.getMessage()));
+        queue.add(request);
     }
 }
