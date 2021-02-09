@@ -30,7 +30,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 public class Locating extends AppCompatActivity {
     // TODO: play around with these, segment is number of cells, space may be a real world measurement
     private static final int space = 500; // ft
-    private static final int segments = 100;
+    static final int segments = 100;
     //
     private static final int ymid = 1300;
     private static final int barlen = 1000;
@@ -121,7 +121,7 @@ public class Locating extends AppCompatActivity {
         list.setAdapter(arrayAdapter);
 
         // TODO: change these for your AP's
-        String[] AP = new String[]{"RPiHotspot", "VDCN-Resident", "WIN-D6OH58RJKSU 4714"};
+        String[] AP = new String[]{"BIO251_A_TrilaterationAP", "BIO251_B_TrilaterationAP", "2WIRE601_2GEXT"};
         //
         locator = new Locator(segments, AP[0], AP[1], AP[2]);
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);

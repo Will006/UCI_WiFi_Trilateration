@@ -2,6 +2,9 @@ package com.example.wifitester;
 
 import android.net.wifi.ScanResult;
 
+import java.util.Collection;
+import java.util.HashMap;
+
 class NoMatch extends Exception {
 }
 
@@ -18,9 +21,9 @@ class NormalizationInfo {
 }
 
 public class Normalizer {
-    public NormalizationInfo getNormalizationFactor(ScanResult scanResult, APInfo[] aps) throws NoMatch {
-        for (APInfo ap : aps) {
-            if (ap.name.equals(scanResult.SSID)) {
+    public NormalizationInfo getNormalizationFactor(ScanResult scanResult, Collection<AccessPoint> aps) throws NoMatch {
+        for (AccessPoint ap : aps) {
+            if (ap.SSID.equals(scanResult.SSID)) {
                 double max = Math.pow(10, ap.maxDB / 10.0);
                 double min = Math.pow(10, ap.minDB / 10.0);
                 double range = max - min;
@@ -34,7 +37,7 @@ public class Normalizer {
         return range / votingSize;
     }
 
-    public double normalized(ScanResult scanResult, APInfo[] aps, int votingSize) throws NoMatch {
+    public double normalized(ScanResult scanResult, Collection<AccessPoint> aps, int votingSize) throws NoMatch {
         NormalizationInfo normalizationInfo = getNormalizationFactor(scanResult, aps);
         return Math.max(
                 votingSize -
@@ -44,7 +47,7 @@ public class Normalizer {
                 0);
     }
 
-    public double normalizedByMeters(ScanResult scanResult, APInfo ap) {
+    public double normalizedByMeters(ScanResult scanResult, AccessPoint ap) {
         double meters = calculateDistanceMeters(scanResult.level, scanResult.frequency);
         double max = calculateDistanceMeters(ap.minDB, scanResult.frequency);
         if (meters > max) {

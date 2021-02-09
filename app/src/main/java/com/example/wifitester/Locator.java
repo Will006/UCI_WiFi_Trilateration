@@ -5,59 +5,36 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-class APInfo {
-    public final String name;
-    public final int minDB;
-    public final int maxDB;
 
-    public APInfo(String name, int minDB, int maxDB) {
-        this.name = name;
-        this.minDB = minDB;
-        this.maxDB = maxDB;
-    }
-}
 
 public class Locator {
     final int circleThresh = 300;
-    private int[][] voting;
-    final List<APInfo> aps;
+    public int[][] voting;
     private final Normalizer normalizer;
     private int votes;
+
+    HashMap<String, AccessPoint> aps;
     //
 
     public Locator(int size, String ap1, String ap2, String ap3) {
-        // TODO: change these if you're using the normalized version, set max/min by checking signal strength at each AP
-        // TODO: set these via some setup thing
-        final int maxDb1 = -25;
-        final int minDB1 = -65;
-        final int maxDB2 = -25;
-        final int minDB2 = -65;
-        final int maxDB3 = -25;
-        final int minDB3 = -65;
+
 
         voting = new int[size][size];
-        this.aps = new ArrayList<>();
-        this.aps.add(new APInfo(ap1, minDB1, maxDb1));
-        this.aps.add(new APInfo(ap2, minDB2, maxDB2));
-        this.aps.add(new APInfo(ap3, minDB3, maxDB3));
+        this.aps.put(ap1,AccessPoint.GetAccessPoint(ap1));
+        this.aps.put(ap2,AccessPoint.GetAccessPoint(ap2));
+        this.aps.put(ap3,AccessPoint.GetAccessPoint(ap3));
 
         normalizer = new Normalizer();
     }
 
-    private APInfo getAPbyName(String apName) throws NoMatch {
-        Optional<APInfo> ap = aps.stream().filter((apInfo -> apInfo.name.equals(apName))).findFirst();
-        if (ap.isPresent()) {
-            return ap.get();
-        }
-        throw new NoMatch();
-    }
 
     // TODO: change to whatever normalization we use at the end
     public double getNormalized(ScanResult scanResult) throws NoMatch {
-        return normalizer.normalizedByMeters(scanResult, getAPbyName(scanResult.SSID));
+        return normalizer.normalizedByMeters(scanResult, AccessPoint.GetAccessPoint(scanResult.SSID));
     }
 
     void vote(ScanResult scanResult) throws NoMatch {
@@ -69,17 +46,13 @@ public class Locator {
         int[] apMatrixCell = new int[]{-1, -1};
 
         // aps will have y = 0
-        if (aps.get(0).name.equals(scanResult.SSID)) {
-            apMatrixCell = new int[]{0, 0};
+        if(aps.isEmpty())
+        {
+            return;
         }
-        if (aps.get(1).name.equals(scanResult.SSID)) {
-            apMatrixCell = new int[]{voting.length - 1, 0};
-        }
-        if (aps.get(2).name.equals(scanResult.SSID)) {
-            apMatrixCell = new int[]{0, voting[0].length -1};
-        }
-        if (Arrays.equals(apMatrixCell, new int[]{-1, -1})) {
-            // fail
+        apMatrixCell=aps.get(scanResult.SSID).Location;
+        if(apMatrixCell==null)
+        {
             return;
         }
         // END
@@ -117,7 +90,6 @@ public class Locator {
         voting = new int[voting.length][voting.length];
         votes = 0;
     }
-
     // TODO: gets the x value, may need to fudge with this
     int getMaxSegment() {
         int max = -1;
