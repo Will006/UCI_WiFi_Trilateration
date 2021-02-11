@@ -203,8 +203,8 @@ public class Locating extends AppCompatActivity {
         DataWriter d = new DataWriter(this, "votingMatrix" + fileCount);
         fileCount++;
         d.getFile("");
-        int[][] voting = locator.getVoting();
-        for (int[] ints : voting) {
+        int[][][] voting = locator.getVoting();
+        for (int[] ints : voting[segments/2]) {
             d.writeData(Arrays.stream(ints).mapToObj(String::valueOf).toArray(String[]::new));
         }
         d.saveData();
