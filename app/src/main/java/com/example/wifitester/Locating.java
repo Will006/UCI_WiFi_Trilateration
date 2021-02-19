@@ -11,6 +11,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -200,6 +201,9 @@ public class Locating extends AppCompatActivity {
     };
 
     void writeVoting() {
+        //Log.d("bazinga","would start writing here");
+        locator.findPos();
+        Log.d("Locator", locator.getPos()[1] + " " + locator.getPos()[2]);
         DataWriter d = new DataWriter(this, "votingMatrix" + fileCount);
         fileCount++;
         d.getFile("");
@@ -208,7 +212,7 @@ public class Locating extends AppCompatActivity {
             d.writeData(Arrays.stream(ints).mapToObj(String::valueOf).toArray(String[]::new));
         }
         d.saveData();
-        System.out.print(locator.getPos());
+
     }
 
     @Override
