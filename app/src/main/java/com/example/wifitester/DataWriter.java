@@ -104,9 +104,10 @@ public class DataWriter extends AppCompatActivity {
 
     void sendData() {
         RequestQueue queue = Volley.newRequestQueue(ctx);
-        String url = "http://80435051e03d.ngrok.io/";
+        String url = "http://192.168.1.163:5000/volley";
         JSONObject jsonObject = new JSONObject();
         try {
+            Log.d("contents", readFile().toString());
             jsonObject.put("contents", readFile().toString());
         } catch (JSONException e) {
             e.printStackTrace();
@@ -115,7 +116,7 @@ public class DataWriter extends AppCompatActivity {
         JsonObjectRequest request = new JsonObjectRequest(url,
                 jsonObject,
                 response -> Log.d("response", String.valueOf(response)),
-                error -> Log.e("response error", error.getMessage()));
+                error -> Log.e("response error", "response failed"));
         queue.add(request);
     }
 }
