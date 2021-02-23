@@ -20,14 +20,9 @@ public class Locator {
     HashMap<String, AccessPoint> aps;
     //
 
-    public Locator(int size, String ap1, String ap2, String ap3) {
-
-
+    public Locator(int size, HashMap<String, AccessPoint> APSet) {
         voting = new int[size][size];
-        this.aps.put(ap1,AccessPoint.GetAccessPoint(ap1));
-        this.aps.put(ap2,AccessPoint.GetAccessPoint(ap2));
-        this.aps.put(ap3,AccessPoint.GetAccessPoint(ap3));
-
+        this.aps = APSet;
         normalizer = new Normalizer();
     }
 

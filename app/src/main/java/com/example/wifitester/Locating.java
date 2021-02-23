@@ -19,11 +19,12 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.dynamicanimation.animation.DynamicAnimation;
-import androidx.dynamicanimation.animation.SpringAnimation;
+//import androidx.dynamicanimation.animation.DynamicAnimation;
+//import androidx.dynamicanimation.animation.SpringAnimation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
@@ -121,9 +122,9 @@ public class Locating extends AppCompatActivity {
         list.setAdapter(arrayAdapter);
 
         // TODO: change these for your AP's
-        String[] AP = new String[]{"BIO251_A_TrilaterationAP", "BIO251_B_TrilaterationAP", "2WIRE601_2GEXT"};
-        //
-        locator = new Locator(segments, AP[0], AP[1], AP[2]);
+        HashMap<String, AccessPoint> APSet = AccessPoint.GetSubSet("BIO251_A_TrilaterationAP","BIO251_B_TrilaterationAP","2WIRE601_2GEXT","ASUS_18_2G");
+
+        locator = new Locator(segments, APSet);
         WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         BroadcastReceiver bp = new BroadcastReceiver() {
             @Override
@@ -138,17 +139,21 @@ public class Locating extends AppCompatActivity {
                     wiFiScanner.scanWifi();
                     return;
                 }
-                if (results.stream().anyMatch(r -> Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID)))) {
+
+                //if (results.stream().anyMatch(r -> Arrays.stream(APSet.values()).anyMatch(ap -> ap.equals(r.SSID)))) {
+                if (results.stream().anyMatch(r -> APSet.values().stream().anyMatch(ap -> ap.SSID.equals(r.SSID)))) {
                     arrayList.clear();
                     try {
-                        for (ScanResult r : results.stream().filter(r -> Arrays.stream(AP).anyMatch(ap -> ap.equals(r.SSID))).toArray(ScanResult[]::new)) {
+                        for (ScanResult r : results.stream().filter(r -> APSet.values().stream().anyMatch(ap -> ap.SSID.equals(r.SSID))).toArray(ScanResult[]::new)) {
                             Toast.makeText(getApplicationContext(), "Voting ... " + locator.getNumVotes(), Toast.LENGTH_SHORT).show();
                             locator.vote(r);
                             arrayList.add(r.SSID + ": dBm[" + r.level + "] - normalized distance {" + locator.getNormalized(r) + "}");
                         }
-                        arrayList.add(AP[0] + " Max|Min: (" + locator.aps.get(0).maxDB + "|" + locator.aps.get(0).minDB + ")");
-                        arrayList.add(AP[1] + " Max|Min: (" + locator.aps.get(1).maxDB + "|" + locator.aps.get(1).minDB + ")");
-                        arrayList.add(AP[2] + " Max|Min: (" + locator.aps.get(2).maxDB + "|" + locator.aps.get(2).minDB + ")");
+
+                        for (AccessPoint CurrentAP:APSet.values())
+                        {
+                            arrayList.add(CurrentAP + " Max|Min: (" + CurrentAP.maxDB + "|" + CurrentAP.minDB + ")");
+                        }
                         arrayAdapter.notifyDataSetChanged();
                     } catch (NoMatch n) {
                         return;
@@ -187,8 +192,8 @@ public class Locating extends AppCompatActivity {
 //            Toast.makeText(getApplicationContext(), "Moving dot to " + r, Toast.LENGTH_SHORT).show();
 //            dot = findViewById(R.id.dotView);
 //            dot.setTranslationX(r);
-            SpringAnimation springAnimation = new SpringAnimation(dot, DynamicAnimation.X, sol);
-            springAnimation.start();
+            //SpringAnimation springAnimation = new SpringAnimation(dot, DynamicAnimation.X, sol);
+            //springAnimation.start();
 //            ObjectAnimator ani = ObjectAnimator.ofFloat(dot,
 //                    "translationX",
 //                    0, sol);
