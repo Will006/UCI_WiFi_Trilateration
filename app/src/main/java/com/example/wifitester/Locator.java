@@ -27,7 +27,8 @@ public class Locator {
     private final Normalizer normalizer;
     private int votes;
     int[] pos;
-    //
+    //pos is the classic [x,y,z] coordiantes with z being height
+    //data is rearranged for readability
 
     public Locator(int size, String ap1, String ap2, String ap3) {
         // TODO: change these if you're using the normalized version, set max/min by checking signal strength at each AP
@@ -73,13 +74,13 @@ public class Locator {
         if (aps.get(0).name.equals(scanResult.SSID)) {
             apMatrixCell = new int[]{voting.length/2,0,0,0};
         }
-        if (aps.get(1).name.equals(scanResult.SSID)) {
+        else if (aps.get(1).name.equals(scanResult.SSID)) {
             apMatrixCell = new int[]{voting.length/2,voting[0].length - 1, 0};
         }
-        if (aps.get(2).name.equals(scanResult.SSID)) {
+        else if (aps.get(2).name.equals(scanResult.SSID)) {
             apMatrixCell = new int[]{voting.length/2,0, voting[0][0].length -1};
         }
-        if (Arrays.equals(apMatrixCell, new int[]{-1, -1})) {
+        else if (Arrays.equals(apMatrixCell, new int[]{-1, -1})) {
             // fail
             return;
         }
@@ -128,13 +129,11 @@ public class Locator {
     // TODO: gets the x value, may need to fudge with this
     int getMaxSegment() {
         int max = -1;
-        int index = -1;
         for (int h = 0; h < voting.length; h++) {
             for (int i = 0; i < voting.length; i++) {
                 for (int j = 0; j < voting.length; j++) {
                     if (voting[h][i][j] > max) {
                         max = voting[h][i][j];
-                        index = i;
                     }
                 }
             }
@@ -149,27 +148,26 @@ public class Locator {
         int numOfMax = 0;
         int[] tempPos = new int[] {0,0,0};
         ArrayList<ArrayList<Integer>> maxList = new ArrayList<ArrayList<Integer>>();
-        //int[][] maxList = new int[][] {tempPos};
         for (int h = 0; h < voting.length; h++) {
             for (int i = 0; i < voting.length; i++) {
                 for (int j = 0; j < voting.length; j++) {
                     if (voting[h][i][j] > max) {
                         numOfMax = 1;
                         max = voting[h][i][j];
-                        tempPos = new int[] {voting.length /2, i, j};
+                        tempPos = new int[] {h, i, j};
                         maxList.clear();
                         maxList.add(new ArrayList<Integer>());
-                        maxList.get(numOfMax - 1).add(voting.length / 2);
-                        maxList.get(numOfMax - 1).add(i);
+                        maxList.get(numOfMax - 1).add(h);
                         maxList.get(numOfMax - 1).add(j);
+                        maxList.get(numOfMax - 1).add(i);
                     }
                     else if ((voting[h][i][j]!=0)&&(voting[h][i][j]==max))
                     {
                         numOfMax++;
                         maxList.add(new ArrayList<Integer>());
-                        maxList.get(numOfMax - 1).add(voting.length / 2);
-                        maxList.get(numOfMax - 1).add(i);
+                        maxList.get(numOfMax - 1).add(h);
                         maxList.get(numOfMax - 1).add(j);
+                        maxList.get(numOfMax - 1).add(i);
                     }
                 }
             }
@@ -178,12 +176,14 @@ public class Locator {
         if(numOfMax > 1) {
             float x = 0;
             float y = 0;
+            float z = 0;
             for (int l = 0; l <numOfMax; l++)
             {
                 x+=maxList.get(l).get(1);
                 y+=maxList.get(l).get(2);
+                z+=maxList.get(l).get(0);
             }
-            pos = new int[] {voting.length/2, (int)x/numOfMax, (int)y/numOfMax};
+            pos = new int[] {(int)x/numOfMax, (int)y/numOfMax, (int)z/numOfMax};
         }
         else {
             pos = tempPos;
