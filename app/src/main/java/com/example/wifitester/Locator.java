@@ -3,26 +3,21 @@ package com.example.wifitester;
 import android.net.wifi.ScanResult;
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
 
 
 
 public class Locator {
     final int circleThresh = 300;
-    public int[][] voting;
+    private int[][][] voting;
+    final HashMap<String, AccessPoint> aps;
     private final Normalizer normalizer;
     private int votes;
 
-    HashMap<String, AccessPoint> aps;
-    //
-
     public Locator(int size, HashMap<String, AccessPoint> APSet) {
-        voting = new int[size][size];
+        voting = new int[size][size][size];
         this.aps = APSet;
+
         normalizer = new Normalizer();
     }
 
@@ -37,19 +32,16 @@ public class Locator {
 //        Log.d(scanResult.SSID, "dist is " + dist);
 //        Log.d(scanResult.SSID,  "segment is " + dist / voting.length);
 
-        // TODO: remove this once we do a good setup
-        int[] apMatrixCell = new int[]{-1, -1};
 
         // aps will have y = 0
         if(aps.isEmpty())
-        {
             return;
-        }
-        apMatrixCell=aps.get(scanResult.SSID).Location;
+
+        int[] apMatrixCell=aps.get(scanResult.SSID).Location;
+        
         if(apMatrixCell==null)
-        {
             return;
-        }
+
         // END
         ++votes;
 
@@ -62,12 +54,14 @@ public class Locator {
 //        Log.d(scanResult.SSID, "normalized is " + normalized);
 
         // go through and vote
-        for (int i = 0; i < voting.length; i++) {
-            for (int j = 0; j < voting.length; j++) {
-                // TODO: change first param if you want to use signal to feet
-                if (isOnCircle(Math.max(normalized, 0.01), apMatrixCell, new int[]{i, j})) {
-                    Log.d(scanResult.SSID, "Circle Error " + Math.abs((normalized * normalized) - (sqr(apMatrixCell[0] - i) + sqr(apMatrixCell[1] - j))));
-                    voting[i][j] += 1;
+        for (int h = 0; h < voting.length; h++) {
+            for (int i = 0; i < voting.length; i++) {
+                for (int j = 0; j < voting.length; j++) {
+                     // TODO: change first param if you want to use signal to feet
+                    if (isOnSphere(Math.max(normalized, 0.01), apMatrixCell, new int[]{h, i, j})) {
+                        Log.d(scanResult.SSID, "Circle Error " + Math.abs((normalized * normalized) - (sqr(apMatrixCell[0] - h) + sqr(apMatrixCell[1] - i) + sqr(apMatrixCell[2] - j))));
+                        voting[h][i][j] += 1;
+                    }
                 }
             }
         }
@@ -81,19 +75,25 @@ public class Locator {
         return Math.abs((radius * radius) - (sqr(point[0] - center[0]) + sqr(point[1] - center[1]))) < this.circleThresh; // TODO: something with radius
     }
 
+    private boolean isOnSphere(double radius, int[] center, int[] point) {
+        return Math.abs((radius * radius) - (sqr(point[0] - center[0]) + sqr(point[1] - center[1]) + sqr(point[2] - center[2]))) < this.circleThresh; // TODO: something with radius
+    }
+
     void clear() {
-        voting = new int[voting.length][voting.length];
+        voting = new int[voting.length][voting.length][voting.length];
         votes = 0;
     }
     // TODO: gets the x value, may need to fudge with this
     int getMaxSegment() {
         int max = -1;
         int index = -1;
-        for (int i = 0; i < voting.length; i++) {
-            for (int j = 0; j < voting.length; j++) {
-                if (voting[i][j] > max) {
-                    max = voting[i][j];
-                    index = i;
+        for (int h = 0; h < voting.length; h++) {
+            for (int i = 0; i < voting.length; i++) {
+                for (int j = 0; j < voting.length; j++) {
+                    if (voting[h][i][j] > max) {
+                        max = voting[h][i][j];
+                        index = i;
+                    }
                 }
             }
 //            Integer temp = Arrays.stream(voting[i]).reduce(0, Integer::sum);
@@ -101,7 +101,7 @@ public class Locator {
         return index;
     }
 
-    int[][] getVoting() {
+    int[][][] getVoting() {
         return voting.clone();
     }
 
