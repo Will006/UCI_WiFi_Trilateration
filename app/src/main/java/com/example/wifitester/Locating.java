@@ -10,7 +10,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.AttributeSet;
+import android.os.Looper;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -19,8 +19,9 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-//import androidx.dynamicanimation.animation.DynamicAnimation;
-//import androidx.dynamicanimation.animation.SpringAnimation;
+import androidx.core.os.HandlerCompat;
+import androidx.dynamicanimation.animation.DynamicAnimation;
+import androidx.dynamicanimation.animation.SpringAnimation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,11 +49,11 @@ public class Locating extends AppCompatActivity {
 
 
     static class DrawView extends View {
-        Paint paint = new Paint();
-        Context ctx;
+        final Paint paint = new Paint();
+        final Context ctx;
 
-        DrawView(Context ctx, AttributeSet attrs) {
-            super(ctx, attrs);
+        DrawView(Context ctx) {
+            super(ctx, null);
             this.ctx = ctx;
             paint.setColor(Color.BLACK);
         }
@@ -89,7 +90,7 @@ public class Locating extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         live = true;
         setContentView(R.layout.activity_locating);
-        DrawView dv = new DrawView(this, null);
+        DrawView dv = new DrawView(this);
         int id = View.generateViewId();
         dv.setId(id);
         FrameLayout l = findViewById(R.id.loc_parent);
@@ -125,7 +126,8 @@ public class Locating extends AppCompatActivity {
         HashMap<String, AccessPoint> APSet = AccessPoint.GetSubSet("BIO251_A_TrilaterationAP","BIO251_B_TrilaterationAP","2WIRE601_2GEXT","ASUS_18_2G");
 
         locator = new Locator(segments, APSet);
-        WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         BroadcastReceiver bp = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -179,8 +181,8 @@ public class Locating extends AppCompatActivity {
 
     }
 
-    Handler h = new Handler();
-    Runnable dotRedraw = new Runnable() {
+    final Handler h = HandlerCompat.createAsync(Looper.getMainLooper());
+    final Runnable dotRedraw = new Runnable() {
         @Override
         public void run() {
             dot.setVisibility(View.VISIBLE);

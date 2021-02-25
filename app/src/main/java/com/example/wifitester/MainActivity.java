@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
         ListView listView = findViewById(R.id.wifiList);
 
         // setup helper
-        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         wiFiScanner = new WiFiScanner(wifiReceiver, this);
 
         // setup view with list update notifications via adapter
