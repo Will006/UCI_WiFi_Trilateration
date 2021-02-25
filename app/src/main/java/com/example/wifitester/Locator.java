@@ -116,14 +116,13 @@ public class Locator {
                         max = ints[i][j];
                         tempPos = new int[]{voting.length / 2, i, j};
                         maxList.clear();
-                    } else if ((ints[i][j] != 0) && (ints[i][j] == max)) {
-                        if (numOfMax == 1) {
-                            maxList.clear(); //I know it is a duplicate, I just like being safe
-                            maxList.add(new ArrayList<Integer>());
-                            maxList.get(numOfMax - 1).add(voting.length / 2);
-                            maxList.get(numOfMax - 1).add(tempPos[1]);
-                            maxList.get(numOfMax - 1).add(tempPos[2]);
-                        }
+                        maxList.add(new ArrayList<Integer>());
+                        maxList.get(numOfMax - 1).add(voting.length / 2);
+                        maxList.get(numOfMax - 1).add(i);
+                        maxList.get(numOfMax - 1).add(j);
+                    }
+                    else if ((ints[i][j]!=0)&&(ints[i][j]==max))
+                    {
                         numOfMax++;
                         maxList.add(new ArrayList<Integer>());
                         maxList.get(numOfMax - 1).add(voting.length / 2);
@@ -140,7 +139,7 @@ public class Locator {
             for (int l = 0; l <numOfMax; l++)
             {
                 x+=maxList.get(l).get(1);
-                x+=maxList.get(l).get(2);
+                y+=maxList.get(l).get(2);
             }
             pos = new int[] {voting.length/2, (int)x/numOfMax, (int)y/numOfMax};
         }
