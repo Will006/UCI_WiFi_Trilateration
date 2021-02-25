@@ -1,7 +1,6 @@
 package com.example.wifitester;
 
 import android.net.wifi.ScanResult;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,7 +60,7 @@ public class Locator {
                 for (int j = 0; j < voting.length; j++) {
                      // TODO: change first param if you want to use signal to feet
                     if (isOnSphere(Math.max(normalized, 0.01), apMatrixCell, new int[]{h, i, j})) {
-                        Log.d(scanResult.SSID, "Circle Error " + Math.abs((normalized * normalized) - (sqr(apMatrixCell[0] - h) + sqr(apMatrixCell[1] - i) + sqr(apMatrixCell[2] - j))));
+                        //Log.d(scanResult.SSID, "Circle Error " + Math.abs((normalized * normalized) - (sqr(apMatrixCell[0] - h) + sqr(apMatrixCell[1] - i) + sqr(apMatrixCell[2] - j))));
                         voting[h][i][j] += 1;
                     }
                 }
@@ -128,8 +127,8 @@ public class Locator {
                         numOfMax++;
                         maxList.add(new ArrayList<Integer>());
                         maxList.get(numOfMax - 1).add(voting.length / 2);
-                        maxList.get(numOfMax - 1).add(tempPos[1]);
-                        maxList.get(numOfMax - 1).add(tempPos[2]);
+                        maxList.get(numOfMax - 1).add(i);
+                        maxList.get(numOfMax - 1).add(j);
                     }
                 }
             }
