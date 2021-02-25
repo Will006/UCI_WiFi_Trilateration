@@ -211,6 +211,7 @@ public class Locating extends AppCompatActivity {
             d.writeData(Arrays.stream(ints).mapToObj(String::valueOf).toArray(String[]::new));
         }
         d.saveData();
+        System.out.print(locator.getPos());
     }
 
     @Override

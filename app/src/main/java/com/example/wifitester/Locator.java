@@ -3,6 +3,7 @@ package com.example.wifitester;
 import android.net.wifi.ScanResult;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 
@@ -13,6 +14,7 @@ public class Locator {
     final HashMap<String, AccessPoint> aps;
     private final Normalizer normalizer;
     private int votes;
+    private int[] pos;
 
     public Locator(int size, HashMap<String, AccessPoint> APSet) {
         voting = new int[size][size][size];
@@ -98,7 +100,56 @@ public class Locator {
             }
 //            Integer temp = Arrays.stream(voting[i]).reduce(0, Integer::sum);
         }
-        return index;
+        return max;
+    }
+
+    void findPos() {
+        int max = -1;
+        int numOfMax = 0;
+        int[] tempPos = new int[] {0,0,0};
+        ArrayList<ArrayList<Integer>> maxList = new ArrayList<ArrayList<Integer>>();
+        //int[][] maxList = new int[][] {tempPos};
+        for (int h = 0; h < voting.length; h++) {
+            for (int i = 0; i < voting.length; i++) {
+                for (int j = 0; j < voting.length; j++) {
+                    if (voting[h][i][j] > max) {
+                        numOfMax = 1;
+                        max = voting[h][i][j];
+                        tempPos = new int[] {voting.length /2, i, j};
+                        maxList.clear();
+                    }
+                    else if ((voting[h][i][j]!=0)&&(voting[h][i][j]==max))
+                    {
+                        if (numOfMax == 1) {
+                            maxList.clear(); //I know it is a duplicate, I just like being safe
+                            maxList.add(new ArrayList<Integer>());
+                            maxList.get(numOfMax - 1).add(voting.length / 2);
+                            maxList.get(numOfMax - 1).add(tempPos[1]);
+                            maxList.get(numOfMax - 1).add(tempPos[2]);
+                        }
+                        numOfMax++;
+                        maxList.add(new ArrayList<Integer>());
+                        maxList.get(numOfMax - 1).add(voting.length / 2);
+                        maxList.get(numOfMax - 1).add(tempPos[1]);
+                        maxList.get(numOfMax - 1).add(tempPos[2]);
+                    }
+                }
+            }
+        }
+
+        if(numOfMax > 1) {
+            float x = 0;
+            float y = 0;
+            for (int l = 0; l <numOfMax; l++)
+            {
+                x+=maxList.get(l).get(1);
+                x+=maxList.get(l).get(2);
+            }
+            pos = new int[] {voting.length/2, (int)x/numOfMax, (int)y/numOfMax};
+        }
+        else {
+            pos = tempPos;
+        }
     }
 
     int[][][] getVoting() {
@@ -108,4 +159,6 @@ public class Locator {
     int getNumVotes() {
         return votes;
     }
+
+    int[] getPos() { return pos; }
 }
