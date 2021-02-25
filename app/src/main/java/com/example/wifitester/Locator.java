@@ -89,11 +89,11 @@ public class Locator {
     int getMaxSegment() {
         int max = -1;
         int index = -1;
-        for (int h = 0; h < voting.length; h++) {
+        for (int[][] ints : voting) {
             for (int i = 0; i < voting.length; i++) {
                 for (int j = 0; j < voting.length; j++) {
-                    if (voting[h][i][j] > max) {
-                        max = voting[h][i][j];
+                    if (ints[i][j] > max) {
+                        max = ints[i][j];
                         index = i;
                     }
                 }
@@ -109,17 +109,15 @@ public class Locator {
         int[] tempPos = new int[] {0,0,0};
         ArrayList<ArrayList<Integer>> maxList = new ArrayList<ArrayList<Integer>>();
         //int[][] maxList = new int[][] {tempPos};
-        for (int h = 0; h < voting.length; h++) {
+        for (int[][] ints : voting) {
             for (int i = 0; i < voting.length; i++) {
                 for (int j = 0; j < voting.length; j++) {
-                    if (voting[h][i][j] > max) {
+                    if (ints[i][j] > max) {
                         numOfMax = 1;
-                        max = voting[h][i][j];
-                        tempPos = new int[] {voting.length /2, i, j};
+                        max = ints[i][j];
+                        tempPos = new int[]{voting.length / 2, i, j};
                         maxList.clear();
-                    }
-                    else if ((voting[h][i][j]!=0)&&(voting[h][i][j]==max))
-                    {
+                    } else if ((ints[i][j] != 0) && (ints[i][j] == max)) {
                         if (numOfMax == 1) {
                             maxList.clear(); //I know it is a duplicate, I just like being safe
                             maxList.add(new ArrayList<Integer>());
