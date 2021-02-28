@@ -1,7 +1,9 @@
 package com.example.wifitester;
 
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 class AccessPoint
 {
@@ -22,6 +24,7 @@ class AccessPoint
         Location = Location_In;
     }
 
+    static public final List<String> SSIDs = Arrays.asList("BIO251_A_TrilaterationAP","BIO251_B_TrilaterationAP","2WIRE601_2GEXT","ASUS_18_2G");
     // TODO: change these if you're using the normalized version, set max/min by checking signal strength at each AP
     // TODO: set these via some setup thing
     static private final HashMap<String, AccessPoint> AP_DataBase = new HashMap<String, AccessPoint>() {{
@@ -34,7 +37,7 @@ class AccessPoint
         put("RPiHotspot", new AccessPoint("RPiHotspot", new int[]{0, 10, 0}));
     }};
 
-    static public HashMap<String, AccessPoint> GetSubSet(String ... SSIDList) throws NoMatch {
+    static public HashMap<String, AccessPoint> GetSubSet(List<String> SSIDList) throws NoMatch {
         HashMap<String, AccessPoint> APSubList = new HashMap<String, AccessPoint>();
         for(String SSID : SSIDList)
         {

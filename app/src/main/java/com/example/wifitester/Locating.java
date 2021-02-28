@@ -122,7 +122,7 @@ public class Locating extends AppCompatActivity {
 
         // TODO: change these for your AP's
         try {
-            HashMap<String, AccessPoint> APSet = AccessPoint.GetSubSet("BIO251_A_TrilaterationAP","BIO251_B_TrilaterationAP","2WIRE601_2GEXT","ASUS_18_2G");
+            HashMap<String, AccessPoint> APSet = AccessPoint.GetSubSet(AccessPoint.SSIDs);
 
             locator = new Locator(segments, APSet);
 
@@ -154,6 +154,7 @@ public class Locating extends AppCompatActivity {
                                 locator.vote(r);
                                 arrayList.add(r.SSID + ": dBm[" + r.level + "] - normalized distance {" + locator.getNormalized(r) + "}");
                                 AccessPoint ap = APSet.get(r.SSID);
+                                assert ap != null; // this should never happen since we already confirmed it exists in for loop
                                 arrayList.add(ap.SSID + " Max|Min: (" + ap.maxDB + "|" + ap.minDB + ")");
                             }
                             arrayAdapter.notifyDataSetChanged();
