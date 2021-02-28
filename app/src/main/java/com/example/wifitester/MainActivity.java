@@ -143,8 +143,9 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             // for each result
-            try {
-                for (ScanResult scanResult : results) {
+
+            for (ScanResult scanResult : results) {
+                try {
                     AccessPoint temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
                     // if AP in our DB of known AP's
                     if (temp_AP != null) {
@@ -165,33 +166,34 @@ public class MainActivity extends AppCompatActivity {
                             arrayList.add(scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]");
                         }
                     }
+                } catch (NoMatch noMatch) {
+                    noMatch.printStackTrace();
+                    Log.e("foolish", "you done goofed, we don't have that ssid");
+                    Toast.makeText(getApplicationContext(),
+                            "You messed up dummy. Check AccessPoint has you list of SSIDs.",
+                            Toast.LENGTH_LONG).show();
                 }
-                // if record mode, check number of times
-                if (outside.recordMode) {
-                    if (times > 0) {
-                        // reassure the user that we are working
-                        if (times % 20 == 0)
-                            Toast.makeText(outside, times + " more record(s)", Toast.LENGTH_LONG).show();
-                        // don't forget to count
-                        --times;
-                        // immediately call a scan again (we know this will take awhile so no worries of a race condition)
-                        outside.scanWifi();
-                    } else {
-                        // we are done, enable the record button
-                        Toast.makeText(outside, "Recording finished!", Toast.LENGTH_LONG).show();
-                        findViewById(R.id.Record_WiFi).setEnabled(true);
-                    }
-                } else {
-                    // we are not recording, refresh list
-                    adapter.notifyDataSetChanged();
-                }
-            } catch (NoMatch noMatch) {
-                noMatch.printStackTrace();
-                Log.e("foolish", "you done goofed, we don't have that ssid");
-                Toast.makeText(getApplicationContext(),
-                        "You messed up dummy. Locating line 125.",
-                        Toast.LENGTH_LONG).show();
             }
+            // if record mode, check number of times
+            if (outside.recordMode) {
+                if (times > 0) {
+                    // reassure the user that we are working
+                    if (times % 20 == 0)
+                        Toast.makeText(outside, times + " more record(s)", Toast.LENGTH_LONG).show();
+                    // don't forget to count
+                    --times;
+                    // immediately call a scan again (we know this will take awhile so no worries of a race condition)
+                    outside.scanWifi();
+                } else {
+                    // we are done, enable the record button
+                    Toast.makeText(outside, "Recording finished!", Toast.LENGTH_LONG).show();
+                    findViewById(R.id.Record_WiFi).setEnabled(true);
+                }
+            } else {
+                // we are not recording, refresh list
+                adapter.notifyDataSetChanged();
+            }
+
         }
     };
 
