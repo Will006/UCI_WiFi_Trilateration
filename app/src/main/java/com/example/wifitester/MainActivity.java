@@ -143,55 +143,49 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             // for each result
-            try {
-                for (ScanResult scanResult : results) {
-                    AccessPoint temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
-                    // if AP in our DB of known AP's
-                    if (temp_AP != null) {
-                        // if in record mode
-                        if (outside.recordMode) {
-                            // if this is first sight, create a new file for AP and store reference for later
-                            if (!apLogMap.containsKey(scanResult.SSID)) {
-                                DataWriter d = new DataWriter(outside, scanResult.SSID);
-                                apLogMap.put(scanResult.SSID, d);
-                                d.getFile("Logged Distance, Signal Strength, Calculated Distance (m)");
-                            }
-                            // get writer for this AP and write the data
-                            DataWriter dataWriter = apLogMap.get(scanResult.SSID);
-                            assert dataWriter != null;
-                            dataWriter.writeData(realDistance, scanResult.level, calculateDistanceMeters(scanResult.level, scanResult.frequency));
-                        } else {
-                            // add to view list
-                            arrayList.add(scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]");
+
+            for (ScanResult scanResult : results) {
+                AccessPoint temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
+                // if AP in our DB of known AP's
+                if (temp_AP != null) {
+                    // if in record mode
+                    if (outside.recordMode) {
+                        // if this is first sight, create a new file for AP and store reference for later
+                        if (!apLogMap.containsKey(scanResult.SSID)) {
+                            DataWriter d = new DataWriter(outside, scanResult.SSID);
+                            apLogMap.put(scanResult.SSID, d);
+                            d.getFile("Logged Distance, Signal Strength, Calculated Distance (m)");
                         }
-                    }
-                }
-                // if record mode, check number of times
-                if (outside.recordMode) {
-                    if (times > 0) {
-                        // reassure the user that we are working
-                        if (times % 20 == 0)
-                            Toast.makeText(outside, times + " more record(s)", Toast.LENGTH_LONG).show();
-                        // don't forget to count
-                        --times;
-                        // immediately call a scan again (we know this will take awhile so no worries of a race condition)
-                        outside.scanWifi();
+                        // get writer for this AP and write the data
+                        DataWriter dataWriter = apLogMap.get(scanResult.SSID);
+                        assert dataWriter != null;
+                        dataWriter.writeData(realDistance, scanResult.level, calculateDistanceMeters(scanResult.level, scanResult.frequency));
                     } else {
-                        // we are done, enable the record button
-                        Toast.makeText(outside, "Recording finished!", Toast.LENGTH_LONG).show();
-                        findViewById(R.id.Record_WiFi).setEnabled(true);
+                        // add to view list
+                        arrayList.add(scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]");
                     }
-                } else {
-                    // we are not recording, refresh list
-                    adapter.notifyDataSetChanged();
                 }
-            } catch (NoMatch noMatch) {
-                noMatch.printStackTrace();
-                Log.e("foolish", "you done goofed, we don't have that ssid");
-                Toast.makeText(getApplicationContext(),
-                        "You messed up dummy. Locating line 125.",
-                        Toast.LENGTH_LONG).show();
             }
+            // if record mode, check number of times
+            if (outside.recordMode) {
+                if (times > 0) {
+                    // reassure the user that we are working
+                    if (times % 20 == 0)
+                        Toast.makeText(outside, times + " more record(s)", Toast.LENGTH_LONG).show();
+                    // don't forget to count
+                    --times;
+                    // immediately call a scan again (we know this will take awhile so no worries of a race condition)
+                    outside.scanWifi();
+                } else {
+                    // we are done, enable the record button
+                    Toast.makeText(outside, "Recording finished!", Toast.LENGTH_LONG).show();
+                    findViewById(R.id.Record_WiFi).setEnabled(true);
+                }
+            } else {
+                // we are not recording, refresh list
+                adapter.notifyDataSetChanged();
+            }
+
         }
     };
 

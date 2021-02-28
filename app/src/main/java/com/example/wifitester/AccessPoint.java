@@ -43,13 +43,14 @@ class AccessPoint
         {
             APSubList.put(SSID, AccessPoint.GetAccessPoint(SSID));
         }
-
+        if(APSubList.size()==0)
+        {
+            throw new NoMatch();
+        }
         return APSubList;
     }
 
-    static public AccessPoint GetAccessPoint(String SSID_In) throws NoMatch {
-        if (!AP_DataBase.containsKey(SSID_In))
-            throw new NoMatch();
+    static public AccessPoint GetAccessPoint(String SSID_In) {
         return AP_DataBase.get(SSID_In);
     }
 
