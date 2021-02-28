@@ -73,7 +73,6 @@ public class DataWriter extends AppCompatActivity {
      */
     void saveData() {
         try {
-            sendData();
             outStream.flush();
             outfileStream.flush();
             outfileStream.close();
@@ -102,13 +101,15 @@ public class DataWriter extends AppCompatActivity {
         return text;
     }
 
-    void sendData() {
+    void sendData(String ucinet, int[] pos) {
         RequestQueue queue = Volley.newRequestQueue(ctx);
-        String url = "http://192.168.1.163:5000/volley";
+        String url = "http://192.168.1.163:5000/";
         JSONObject jsonObject = new JSONObject();
         try {
-            Log.d("contents", readFile().toString());
-            jsonObject.put("contents", readFile().toString());
+//            Log.d("contents", readFile().toString());
+            jsonObject.put("x", pos[0]);
+            jsonObject.put("y", pos[1]);
+            jsonObject.put("ucinet", ucinet);
         } catch (JSONException e) {
             e.printStackTrace();
             return;

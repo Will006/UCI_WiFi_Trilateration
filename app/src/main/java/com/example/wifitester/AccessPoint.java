@@ -34,8 +34,7 @@ class AccessPoint
         put("RPiHotspot", new AccessPoint("RPiHotspot", new int[]{0, 10, 0}));
     }};
 
-    static public HashMap<String, AccessPoint> GetSubSet(String ... SSIDList)
-    {
+    static public HashMap<String, AccessPoint> GetSubSet(String ... SSIDList) throws NoMatch {
         HashMap<String, AccessPoint> APSubList = new HashMap<String, AccessPoint>();
         for(String SSID : SSIDList)
         {
@@ -45,9 +44,10 @@ class AccessPoint
         return APSubList;
     }
 
-    static public AccessPoint GetAccessPoint(String SSID_In)
-    {
-        return(AP_DataBase.get((SSID_In)));
+    static public AccessPoint GetAccessPoint(String SSID_In) throws NoMatch {
+        if (!AP_DataBase.containsKey(SSID_In))
+            throw new NoMatch();
+        return AP_DataBase.get(SSID_In);
     }
 
     

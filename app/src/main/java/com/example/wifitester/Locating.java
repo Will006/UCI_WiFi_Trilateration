@@ -11,7 +11,6 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -25,6 +24,7 @@ import androidx.core.os.HandlerCompat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -38,7 +38,7 @@ public class Locating extends AppCompatActivity {
     private static final int xoffset = 40;
     private final ArrayList<String> arrayList = new ArrayList<>();
     private ArrayAdapter arrayAdapter;
-//    static int count = 0;
+    //    static int count = 0;
     static int fileCount = 0;
     static boolean live = true;
     View dot;
@@ -61,7 +61,7 @@ public class Locating extends AppCompatActivity {
             super.onDraw(c);
             c.drawLine(xoffset, ymid, xoffset + barlen, ymid, paint);
             for (int i = 0; i <= segments; i++) {
-                c.drawLine(i * barlen / (float)segments + xoffset, ymid - 100, i * barlen / (float)segments + xoffset, ymid + 100, paint);
+                c.drawLine(i * barlen / (float) segments + xoffset, ymid - 100, i * barlen / (float) segments + xoffset, ymid + 100, paint);
             }
         }
     }
@@ -88,15 +88,15 @@ public class Locating extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         live = true;
         setContentView(R.layout.activity_locating);
-        DrawView dv = new DrawView(this);
-        int id = View.generateViewId();
-        dv.setId(id);
-        FrameLayout l = findViewById(R.id.loc_parent);
-        l.addView(dv);
+//        DrawView dv = new DrawView(this);
+//        int id = View.generateViewId();
+//        dv.setId(id);
+//        FrameLayout l = findViewById(R.id.loc_parent);
+//        l.addView(dv);
 
         dot = findViewById(R.id.dotView);
         dot.setLayoutParams(new FrameLayout.LayoutParams(barlen / 2 / segments, barlen / 2 / segments));
-        dot.setTranslationY(ymid - barlen / 4f / (float)segments);
+        dot.setTranslationY(ymid - barlen / 4f / (float) segments);
 
         Button clear = findViewById(R.id.clear_button);
         Button save = findViewById(R.id.save_button);
@@ -121,44 +121,46 @@ public class Locating extends AppCompatActivity {
         list.setAdapter(arrayAdapter);
 
         // TODO: change these for your AP's
-        HashMap<String, AccessPoint> APSet = AccessPoint.GetSubSet("BIO251_A_TrilaterationAP","BIO251_B_TrilaterationAP","2WIRE601_2GEXT","ASUS_18_2G");
+        try {
+            HashMap<String, AccessPoint> APSet = AccessPoint.GetSubSet("BIO251_A_TrilaterationAP","BIO251_B_TrilaterationAP","2WIRE601_2GEXT","ASUS_18_2G");
 
-        locator = new Locator(segments, APSet);
+            locator = new Locator(segments, APSet);
 
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        BroadcastReceiver bp = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
+            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            BroadcastReceiver bp = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
 //                Toast.makeText(getApplicationContext(), "Scanning ... ", Toast.LENGTH_SHORT).show();
-                List<ScanResult> results = wifiManager.getScanResults();
-                // make sure we release hold
-                unregisterReceiver(this);
-                // if we got nothing
-                if (results.size() == 0) {
-                    // early return
-                    wiFiScanner.scanWifi();
-                    return;
-                }
-
-                //if (results.stream().anyMatch(r -> Arrays.stream(APSet.values()).anyMatch(ap -> ap.equals(r.SSID)))) {
-                if (results.stream().anyMatch(r -> APSet.values().stream().anyMatch(ap -> ap.SSID.equals(r.SSID)))) {
-                    arrayList.clear();
-                    try {
-                        for (ScanResult r : results.stream().filter(r -> APSet.values().stream().anyMatch(ap -> ap.SSID.equals(r.SSID))).toArray(ScanResult[]::new)) {
-                            Toast.makeText(getApplicationContext(), "Voting ... " + locator.getNumVotes(), Toast.LENGTH_SHORT).show();
-                            locator.vote(r);
-                            arrayList.add(r.SSID + ": dBm[" + r.level + "] - normalized distance {" + locator.getNormalized(r) + "}");
-                        }
-
-                        for (AccessPoint CurrentAP:APSet.values())
-                        {
-                            arrayList.add(CurrentAP + " Max|Min: (" + CurrentAP.maxDB + "|" + CurrentAP.minDB + ")");
-                        }
-                        arrayAdapter.notifyDataSetChanged();
-                    } catch (NoMatch n) {
+                    List<ScanResult> results = wifiManager.getScanResults();
+                    // make sure we release hold
+                    unregisterReceiver(this);
+                    // if we got nothing
+                    if (results.size() == 0) {
+                        // early return
+                        wiFiScanner.scanWifi();
                         return;
                     }
-                }
+
+                    //if (results.stream().anyMatch(r -> Arrays.stream(APSet.values()).anyMatch(ap -> ap.equals(r.SSID)))) {
+                    if (results.stream().anyMatch(r -> APSet.values().stream().anyMatch(ap -> ap.SSID.equals(r.SSID)))) {
+                        arrayList.clear();
+                        try {
+                            for (ScanResult r : results.stream().filter(
+                                    r -> APSet.values().stream()
+                                            .anyMatch(ap ->
+                                                    ap.SSID.equals(r.SSID)))
+                                    .toArray(ScanResult[]::new)) {
+                                Toast.makeText(getApplicationContext(), "Voting ... " + locator.getNumVotes(), Toast.LENGTH_SHORT).show();
+                                locator.vote(r);
+                                arrayList.add(r.SSID + ": dBm[" + r.level + "] - normalized distance {" + locator.getNormalized(r) + "}");
+                                AccessPoint ap = APSet.get(r.SSID);
+                                arrayList.add(ap.SSID + " Max|Min: (" + ap.maxDB + "|" + ap.minDB + ")");
+                            }
+                            arrayAdapter.notifyDataSetChanged();
+                        } catch (NoMatch n) {
+                            return;
+                        }
+                    }
 //                ++count;
 //                if (count == 20) {
 //                    Toast.makeText(getApplicationContext(), "Clearing ... ", Toast.LENGTH_SHORT).show();
@@ -167,16 +169,22 @@ public class Locating extends AppCompatActivity {
 //                }
 //                redrawDot(locator.getMaxSegment());
 //                h.postDelayed(dotRedraw, 100);
-                dotRedraw.run();
-                if (live)
-                    h.post(wiFiScanner::scanWifi);
-            }
-        };
+                    dotRedraw.run();
+                    if (live)
+                        h.post(wiFiScanner::scanWifi);
+                }
+            };
 //        h.postDelayed(dotRedraw, 1000);
-        wiFiScanner = new WiFiScanner(bp, this);
+            wiFiScanner = new WiFiScanner(bp, this);
 //        e.scheduleAtFixedRate(dotRedraw, 5, 1, TimeUnit.SECONDS);
-        wiFiScanner.scanWifi();
-
+            wiFiScanner.scanWifi();
+        } catch (NoMatch noMatch) {
+            noMatch.printStackTrace();
+            Log.e("foolish", "you done goofed, we don't have that ssid");
+            Toast.makeText(this,
+                    "You messed up dummy. Locating line 125.",
+                    Toast.LENGTH_LONG).show();
+        }
     }
 
     final Handler h = HandlerCompat.createAsync(Looper.getMainLooper());
@@ -206,17 +214,17 @@ public class Locating extends AppCompatActivity {
 
     void writeVoting() {
         //Log.d("bazinga","would start writing here");
-        locator.findPos();
-        Log.d("Locator", locator.getPos()[1] + " " + locator.getPos()[2]);
+        int[] pos = locator.findPosition();
+        Log.d("Locator", pos[1] + " " + pos[2]);
         DataWriter d = new DataWriter(this, "votingMatrix" + fileCount);
         fileCount++;
         d.getFile("");
         int[][][] voting = locator.getVoting();
-        for (int[] ints : voting[segments/2]) {
+        for (int[] ints : voting[segments / 2]) {
             d.writeData(Arrays.stream(ints).mapToObj(String::valueOf).toArray(String[]::new));
         }
+        d.sendData(String.valueOf(new Date().getTime()).substring(0,9), pos);
         d.saveData();
-
     }
 
     @Override
