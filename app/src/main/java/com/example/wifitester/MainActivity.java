@@ -145,33 +145,25 @@ public class MainActivity extends AppCompatActivity {
             // for each result
 
             for (ScanResult scanResult : results) {
-                try {
-                    AccessPoint temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
-                    // if AP in our DB of known AP's
-                    if (temp_AP != null) {
-                        // if in record mode
-                        if (outside.recordMode) {
-                            // if this is first sight, create a new file for AP and store reference for later
-                            if (!apLogMap.containsKey(scanResult.SSID)) {
-                                DataWriter d = new DataWriter(outside, scanResult.SSID);
-                                apLogMap.put(scanResult.SSID, d);
-                                d.getFile("Logged Distance, Signal Strength, Calculated Distance (m)");
-                            }
-                            // get writer for this AP and write the data
-                            DataWriter dataWriter = apLogMap.get(scanResult.SSID);
-                            assert dataWriter != null;
-                            dataWriter.writeData(realDistance, scanResult.level, calculateDistanceMeters(scanResult.level, scanResult.frequency));
-                        } else {
-                            // add to view list
-                            arrayList.add(scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]");
+                AccessPoint temp_AP = AccessPoint.GetAccessPoint(scanResult.SSID);
+                // if AP in our DB of known AP's
+                if (temp_AP != null) {
+                    // if in record mode
+                    if (outside.recordMode) {
+                        // if this is first sight, create a new file for AP and store reference for later
+                        if (!apLogMap.containsKey(scanResult.SSID)) {
+                            DataWriter d = new DataWriter(outside, scanResult.SSID);
+                            apLogMap.put(scanResult.SSID, d);
+                            d.getFile("Logged Distance, Signal Strength, Calculated Distance (m)");
                         }
+                        // get writer for this AP and write the data
+                        DataWriter dataWriter = apLogMap.get(scanResult.SSID);
+                        assert dataWriter != null;
+                        dataWriter.writeData(realDistance, scanResult.level, calculateDistanceMeters(scanResult.level, scanResult.frequency));
+                    } else {
+                        // add to view list
+                        arrayList.add(scanResult.SSID + ": dB[" + scanResult.level + "], Dist[" + calculateDistanceMeters(scanResult.level, scanResult.frequency) + "m]");
                     }
-                } catch (NoMatch noMatch) {
-                    noMatch.printStackTrace();
-                    Log.e("foolish", "you done goofed, we don't have that ssid");
-                    Toast.makeText(getApplicationContext(),
-                            "You messed up dummy. Check AccessPoint has you list of SSIDs.",
-                            Toast.LENGTH_LONG).show();
                 }
             }
             // if record mode, check number of times
