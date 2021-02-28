@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
                     // we are not recording, refresh list
                     adapter.notifyDataSetChanged();
                 }
-            } catch (NoMatch noMatch) {
+            } catch (Exception noMatch) {
                 noMatch.printStackTrace();
                 Log.e("foolish", "you done goofed, we don't have that ssid");
                 Toast.makeText(getApplicationContext(),
