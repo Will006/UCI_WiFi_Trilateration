@@ -30,7 +30,7 @@ import java.util.List;
 
 public class Locating extends AppCompatActivity {
     // TODO: play around with these, segment is number of cells, space may be a real world measurement
-    private static final int space = 500; // ft
+    private static final int space = 44; // ft
     static final int segments = 100;
     //
     private static final int ymid = 1300;

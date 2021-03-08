@@ -23,8 +23,8 @@ public class Locator {
 
 
     // TODO: change to whatever normalization we use at the end
-    public double getNormalized(ScanResult scanResult) throws NoMatch {
-        return normalizer.normalizedByMeters(scanResult, AccessPoint.GetAccessPoint(scanResult.SSID));
+    public double getNormalized(ScanResult scanResult) {
+        return normalizer.normalizedByMeters(scanResult, Objects.requireNonNull(aps.get(scanResult.SSID)));
     }
 
     void vote(ScanResult scanResult) throws NoMatch {

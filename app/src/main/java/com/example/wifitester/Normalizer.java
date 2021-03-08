@@ -5,6 +5,8 @@ import android.net.wifi.ScanResult;
 import java.util.Collection;
 import java.util.HashMap;
 
+import static com.example.wifitester.Locating.segments;
+
 class NoMatch extends Exception {
 }
 
@@ -58,10 +60,11 @@ public class Normalizer {
     public double normalizedByMeters(ScanResult scanResult, AccessPoint ap) {
         double meters = calculateDistanceMeters(scanResult.level, scanResult.frequency);
         double max = calculateDistanceMeters(ap.minDB, scanResult.frequency);
+        double min = calculateDistanceMeters(ap.maxDB, scanResult.frequency);
         if (meters > max) {
             return max;
         }
-        return meters / max * 100;
+        return (1-(max - meters) / (max-min)) * segments;
     }
 
     //https://stackoverflow.com/questions/11217674/how-to-calculate-distance-from-wifi-router-using-signal-strength
